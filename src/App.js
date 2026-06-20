@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 function App() {
   // LINK TO YOUR LIVE AWS BACKEND SERVER
-  const BACKEND_URL = "http://Rentofficeplace-backend-env.eba-2yqegvud.ap-southeast-2.elasticbeanstalk.com";
+  const BACKEND_URL = "https://Rentofficeplace-backend-env.eba-2yqegvud.ap-southeast-2.elasticbeanstalk.com";
   
   const [serverStatus, setServerStatus] = useState("Connecting to AWS API...");
 
