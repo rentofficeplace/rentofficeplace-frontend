@@ -65,7 +65,7 @@ function App() {
       {/* SYSTEM INTEGRATION HEALTH STATUS FOOTER */}
       <div className="container py-4 text-center">
         <div className="alert alert-dark d-inline-block shadow-sm">
-          <span className="fw-bold text-secondary">Cloud Core Connection Pipeline Status:</span> <span className="text-success fw-bold">{serverStatus}</span>
+          <span className="fw-bold text-secondary">Cloud Core Connection Pipeline Status :</span> <span className="text-success fw-bold">{serverStatus}</span>
         </div>
       </div>
     </div>
