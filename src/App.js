@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// Unified Initial Properties Database Template
 const INITIAL_PROPERTIES = [
   {
     id: 1,
@@ -44,16 +43,17 @@ function App() {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [availableCountries, setAvailableCountries] = useState([]);
 
-  // Form Profile Selections (Inspired by MagicBricks & 99acres examples)
+  // Form Configuration States
   const [userProfile, setUserProfile] = useState("Owner"); 
+  const [authMethod, setAuthMethod] = useState("Mobile"); // "Mobile" or "Email"
 
   // UI State Components
   const [showMyActivityDropdown, setShowMyActivityDropdown] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [shortlistedList, setShortlistedList] = useState([]);
 
   // User Onboarding Input Fields
   const [mobileNumber, setMobileNumber] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState("Residential");
   const [newSubCategory, setNewSubCategory] = useState("Apartment");
@@ -88,11 +88,15 @@ function App() {
 
   const triggerOnboardingNext = (e) => {
     e.preventDefault();
-    if (mobileNumber.length < 10) {
-      alert("Please enter a valid connection mobile number.");
+    if (authMethod === "Mobile" && mobileNumber.length < 10) {
+      alert("Please enter a valid mobile number.");
       return;
     }
-    setListingStep(2); // Progresses into details collection card smoothly
+    if (authMethod === "Email" && !emailAddress.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    setListingStep(2); 
   };
 
   const submitFinalListing = (e) => {
@@ -116,12 +120,13 @@ function App() {
     setCurrentPage("landing");
     setListingStep(1);
     setMobileNumber("");
+    setEmailAddress("");
   };
 
   return (
     <div style={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }} onClick={() => setShowMyActivityDropdown(false)}>
       
-      {/* BRAND HEADER SHORTCUT NAVIGATION */}
+      {/* BRAND HEADER NAVIGATION */}
       <nav className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm py-3" style={{ backgroundColor: '#a81c1c' }}>
         <div className="container px-4">
           <span className="navbar-brand fs-3 fw-bold text-white me-5" onClick={() => { setCurrentPage("landing"); }} style={{ cursor: 'pointer' }}>
@@ -156,7 +161,7 @@ function App() {
         <div className="container py-5">
           <div className="row align-items-center g-5">
             
-            {/* LEFT COLUMN: BRAND MARKETING AND VALUE PROPOSITIONS (MATCHES EXAMPLES) */}
+            {/* LEFT COLUMN: BRAND MARKETING */}
             <div className="col-lg-6 text-start d-none d-lg-block">
               <h1 className="fw-bold text-dark display-4 mb-3" style={{ lineHeight: '1.2' }}>
                 Post your property Ad to sell or rent online for <span className="text-success">Free!</span>
@@ -166,29 +171,16 @@ function App() {
               <div className="d-flex flex-column gap-3 mb-4">
                 <div className="d-flex align-items-center gap-3">
                   <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Get Access to Global Verified Buyers</strong><span className="text-muted small">Reach millions of high-intent search console queries.</span></div>
+                  <div><strong className="text-dark d-block">Get Access to Global Verified Buyers</strong><span className="text-muted small">Reach millions of high-intent queries.</span></div>
                 </div>
                 <div className="d-flex align-items-center gap-3">
                   <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
                   <div><strong className="text-dark d-block">Sell or Rent Faster for FREE</strong><span className="text-muted small">Zero hidden onboarding tier cuts or commission percentages.</span></div>
                 </div>
-                <div className="d-flex align-items-center gap-3">
-                  <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Real-time Dashboard Analytics</strong><span className="text-muted small">Keep tabs on shortlists, views, and inquiry connection counts.</span></div>
-                </div>
-              </div>
-
-              {/* Minimal Clean Illustration Vector Placeholder Area */}
-              <div className="p-4 rounded-4 border bg-white shadow-sm d-flex align-items-center gap-4 mt-5" style={{ borderStyle: 'dashed' }}>
-                <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=120" alt="Illustration" className="rounded-3 shadow-sm" style={{ objectFit: 'cover', height: '80px', width: '120px' }} />
-                <div>
-                  <h6 className="fw-bold mb-1 text-dark">Simplified Real Estate Console</h6>
-                  <p className="small text-muted mb-0">Fill out basic details, configure your geolocation map coordinates, and publish.</p>
-                </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: PROFESSIONAL WHITE onboarding CARD (MATCHES IMAGE_183037 & IMAGE_182FC1) */}
+            {/* RIGHT COLUMN: PROFESSIONAL CONVERSION CARD */}
             <div className="col-lg-6">
               <div className="card border-0 shadow-lg p-4 bg-white rounded-4 text-start mx-auto" style={{ maxWidth: '520px' }}>
                 
@@ -197,7 +189,7 @@ function App() {
                     <h3 className="fw-bold text-dark mb-1">Let's get you started</h3>
                     <p className="text-muted small mb-4">Add your baseline parameters to post property items online for free.</p>
                     
-                    {/* Profile Toggle Group (Owner, Agent, Builder) */}
+                    {/* Profile Toggle Group */}
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">You are:</label>
                       <div className="d-flex gap-2">
@@ -209,7 +201,7 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Intent Toggle Group (Sell, Rent/Lease, List as PG) */}
+                    {/* Intent Toggle Group */}
                     <div className="mb-4">
                       <label className="form-label small fw-bold text-secondary">You are here to:</label>
                       <div className="d-flex gap-2">
@@ -221,26 +213,48 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Contact Input Field Group */}
-                    <div className="mb-4">
-                      <label className="form-label small fw-bold text-secondary">Your contact number</label>
-                      <div className="input-group">
-                        <span className="input-group-text bg-light text-dark fw-bold border-end-0">IND +91</span>
-                        <input type="number" className="form-control py-2 ps-3 border-start-0" placeholder="WhatsApp Number" required value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
-                      </div>
-                      <div className="p-2 rounded mt-2 small text-dark" style={{ backgroundColor: '#fff9e6', border: '1px solid #ffeeba' }}>
-                        🟢 Enter your **WhatsApp No.** to get direct enquiries from high-intent Buyers/Tenants instantly.
-                      </div>
-                    </div>
+                    {/* DYNAMIC AUTH METHOD RENDERING FIELD GROUP */}
+                    {authMethod === "Mobile" ? (
+                      <div className="mb-3">
+                        <label className="form-label small fw-bold text-secondary">Your contact number</label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light text-dark fw-bold border-end-0">IND +91</span>
+                          <input type="number" className="form-control py-2 ps-3 border-start-0" placeholder="WhatsApp Number" required value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
+                        </div>
+                        
+                        {/* Option Toggle to switch to Email Mode */}
+                        <div className="text-end mt-2">
+                          <button type="button" className="btn btn-link p-0 small text-primary text-decoration-none fw-semibold" onClick={() => setAuthMethod("Email")}>
+                            ✉ Login with Email instead
+                          </button>
+                        </div>
 
-                    <button type="submit" className="btn btn-danger w-100 fw-bold py-3 fs-5 rounded-3 shadow" style={{ backgroundColor: '#df2020', border: 'none' }}>
+                        <div className="p-2 rounded mt-2 small text-dark" style={{ backgroundColor: '#fff9e6', border: '1px solid #ffeeba' }}>
+                          🟢 Enter your **WhatsApp No.** to get enquiries directly from customers.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-3">
+                        <label className="form-label small fw-bold text-secondary">Your email address</label>
+                        <input type="email" className="form-control py-2 ps-3" placeholder="name@example.com" required value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
+                        
+                        {/* Option Toggle to switch back to Mobile Mode */}
+                        <div className="text-end mt-2">
+                          <button type="button" className="btn btn-link p-0 small text-primary text-decoration-none fw-semibold" onClick={() => setAuthMethod("Mobile")}>
+                            📱 Login with Mobile Number instead
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <button type="submit" className="btn btn-danger w-100 fw-bold py-3 fs-5 rounded-3 shadow mt-2" style={{ backgroundColor: '#df2020', border: 'none' }}>
                       Start Now →
                     </button>
                   </form>
                 ) : (
-                  // STEP 2: DETAILS MATRIX INPUTS
+                  // STEP 2: METADATA DETAILS MATRIX
                   <form onSubmit={submitFinalListing}>
-                    <h4 className="fw-bold text-success mb-3">✓ Verification Initialized. Add Space Details</h4>
+                    <h4 className="fw-bold text-success mb-3">✓ Authentication Complete. Add Details</h4>
                     
                     <div className="mb-2"><label className="form-label small fw-bold mb-1">Property Listing Title</label><input type="text" className="form-control" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Modern Office Workshop Suite" /></div>
                     
@@ -288,7 +302,7 @@ function App() {
         </div>
       )}
 
-      {/* VIEW LAYER 2: SYSTEM MARKETPLACE PUBLIC DISCOVERY */}
+      {/* MAIN EXPLORATION MARKETPLACE DISPLAY CARD */}
       {currentPage === "landing" && (
         <div>
           <header className="py-5 text-white text-center" style={{ background: "linear-gradient(rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.9)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200') center/cover", padding: "75px 0" }}>
