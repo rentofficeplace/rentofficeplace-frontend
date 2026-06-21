@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Global mock data with diverse international listings
+// Global mock data including Commercial, Residential, PG, and Hostels
 const MOCK_PROPERTIES = [
   {
     id: 1,
@@ -26,6 +26,28 @@ const MOCK_PROPERTIES = [
   },
   {
     id: 3,
+    title: "Premium Boys & Girls Single PG",
+    intent: "Rent",
+    type: "PG",
+    locality: "Sector 22, Noida",
+    city: "Noida",
+    country: "India",
+    priceDisplay: "₹12,500 / month",
+    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=600"
+  },
+  {
+    id: 4,
+    title: "Global Student Co-Living Hostel",
+    intent: "Rent",
+    type: "Hostels",
+    locality: "Near Delhi University",
+    city: "Delhi",
+    country: "India",
+    priceDisplay: "₹8,000 / month",
+    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=600"
+  },
+  {
+    id: 5,
     title: "Modern Co-Working Smart Desk",
     intent: "Rent",
     type: "Commercial",
@@ -36,21 +58,21 @@ const MOCK_PROPERTIES = [
     image: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?q=80&w=600"
   },
   {
-    id: 4,
-    title: "Manhattan Executive Boardroom",
+    id: 6,
+    title: "Backpackers International Hostel",
     intent: "Rent",
-    type: "Commercial",
-    locality: "Times Square, New York",
-    city: "New York",
-    country: "United States",
-    priceDisplay: "$4,200 / month",
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600"
+    type: "Hostels",
+    locality: "Downtown Sydney",
+    city: "Sydney",
+    country: "Australia",
+    priceDisplay: "$35 / night",
+    image: "https://images.unsplash.com/photo-1626125345510-4603468eedfb?q=80&w=600"
   }
 ];
 
 function App() {
   const [activeIntent, setActiveIntent] = useState("Rent");
-  const [selectedCountry, setSelectedCountry] = useState("India"); // Fallback default
+  const [selectedCountry, setSelectedCountry] = useState("India"); 
   const [citySearch, setCitySearch] = useState(""); 
   const [propertyType, setPropertyType] = useState("Commercial");
   const [filteredProperties, setFilteredProperties] = useState([]);
@@ -65,7 +87,7 @@ function App() {
           setSelectedCountry(data.country_name);
           setDetectedLocationMsg(`📍 Auto-detected location: ${data.city}, ${data.country_name}`);
           
-          // Run an initial filter automatically based on detected country
+          // Show initial matches based on auto-detected country
           const initialMatches = MOCK_PROPERTIES.filter(prop => 
             prop.country.toLowerCase() === data.country_name.toLowerCase() &&
             prop.intent === activeIntent &&
@@ -77,7 +99,6 @@ function App() {
       .catch(err => {
         console.error("Location detection failed:", err);
         setDetectedLocationMsg("📍 Location detection unavailable. Showing default (India).");
-        // Fallback filter run
         handleSearch();
       });
   }, []);
@@ -98,7 +119,7 @@ function App() {
 
   return (
     <div style={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
-      {/* HEADER NAVBAR */}
+      {/* BRAND HEADER */}
       <nav className="navbar navbar-expand-lg bg-dark navbar-dark py-3">
         <div className="container">
           <span className="fs-3 fw-bold text-white">Rent<span style={{color: '#D4AF37'}}>Office</span>Place</span>
@@ -112,7 +133,7 @@ function App() {
         padding: "80px 0"
       }}>
         <div className="container">
-          <h1 className="fw-bold mb-4">Global Commercial & Residential Gateway</h1>
+          <h1 className="fw-bold mb-4">Global Commercial, Residential & Co-Living Gateway</h1>
 
           <div className="mx-auto" style={{ maxWidth: '900px' }}>
             {/* INTENT SELECTION */}
@@ -141,18 +162,20 @@ function App() {
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. Noida, Sydney, New York" 
+                    placeholder="e.g. Noida, Sydney, Delhi" 
                     value={citySearch}
                     onChange={(e) => setCitySearch(e.target.value)}
                   />
                 </div>
 
-                {/* PROPERTY TYPE */}
+                {/* EXPANDED PROPERTY TYPE DROPDOWN */}
                 <div className="col-md-3">
                   <label className="form-label small fw-bold text-muted mb-1 text-start d-block">Property Type</label>
                   <select className="form-select fw-semibold" value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial Space</option>
+                    <option value="Residential">Residential Flat</option>
+                    <option value="PG">PG (Paying Guest)</option>
+                    <option value="Hostels">Hostels</option>
                   </select>
                 </div>
 
@@ -179,7 +202,11 @@ function App() {
                 <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden bg-white">
                   <img src={property.image} className="card-img-top" alt={property.title} style={{ height: '200px', objectFit: 'cover' }} />
                   <div className="card-body p-4">
-                    <span className="badge bg-danger mb-2">{property.type}</span>
+                    <span className={`badge mb-2 ${
+                      property.type === 'Commercial' ? 'bg-danger' : 
+                      property.type === 'Residential' ? 'bg-success' : 
+                      property.type === 'PG' ? 'bg-warning text-dark' : 'bg-info text-dark'
+                    }`}>{property.type}</span>
                     <h5 className="card-title fw-bold text-dark">{property.title}</h5>
                     <p className="card-text text-muted">📍 {property.locality}, {property.city}</p>
                     <div className="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
@@ -192,7 +219,7 @@ function App() {
             ))
           ) : (
             <div className="col-12 text-center py-5">
-              <p className="text-muted fs-5">No listings found matching these filters in {selectedCountry}. Try changing the city name or switching categories!</p>
+              <p className="text-muted fs-5">No listings found matching these filters in {selectedCountry}. Try changing the category selection or location parameters!</p>
             </div>
           )}
         </div>
