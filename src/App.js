@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Enhanced Global Database Template with multiple countries and sub-localities
+// Truly Global Database: Add any listing from any country here, and the site dynamically adapts!
 const INITIAL_PROPERTIES = [
   {
     id: 1,
@@ -13,6 +13,7 @@ const INITIAL_PROPERTIES = [
     country: "India",
     priceDisplay: "₹65,000 / month",
     isVerified: true,
+    mapAddress: "DLF Phase 3, Gurugram, Haryana, India", // Passed to Google Navigation API
     image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=600"
   },
   {
@@ -26,6 +27,7 @@ const INITIAL_PROPERTIES = [
     country: "India",
     priceDisplay: "₹1,85,000 / month",
     isVerified: true,
+    mapAddress: "Sector 62, Noida, Uttar Pradesh, India",
     image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=600"
   },
   {
@@ -39,50 +41,43 @@ const INITIAL_PROPERTIES = [
     country: "United States",
     priceDisplay: "$4,200 / month",
     isVerified: true,
+    mapAddress: "Times Square, New York, NY, USA",
     image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600"
+  },
+  {
+    id: 4,
+    title: "Premium Sydney Harbour Waterfront Penthouse",
+    intent: "Buy",
+    type: "Residential",
+    subCategory: "Villa",
+    locality: "Circular Quay",
+    city: "Sydney",
+    country: "Australia",
+    priceDisplay: "$8,500,000",
+    isVerified: true,
+    mapAddress: "Circular Quay, Sydney, NSW, Australia",
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=600"
   }
 ];
-
-// Scalable Local SEO Matrix mapping top hotspots dynamically by country
-const SEO_LOCALITY_MAP = {
-  "India": {
-    cities: ["Gurugram", "Noida", "Delhi"],
-    categories: [
-      { heading: "New Projects", items: ["Sector 56 Gurugram", "Sohna Hotspot", "Sector 52 Gurugram"] },
-      { heading: "Flats & Apartments", items: ["Sohna Road", "Sector 79 Gurugram", "Sector 102 Gurugram"] },
-      { heading: "Commercial & Office Spaces", items: ["Sector 62 Noida", "Cyber City Gurugram", "Connaught Place"] }
-    ]
-  },
-  "United States": {
-    cities: ["New York", "Los Angeles", "Chicago"],
-    categories: [
-      { heading: "Executive Hubs", items: ["Times Square NY", "Financial District LA", "Loop Chicago"] },
-      { heading: "Premium Penthouses", items: ["Manhattan Luxury", "Beverly Hills Estates", "Gold Coast Chicago"] },
-      { heading: "Warehouses & Logistics", items: ["Brooklyn Docks", "Long Beach Terminal", "O'Hare Logistics"] }
-    ]
-  }
-};
 
 function App() {
   const [currentPage, setCurrentPage] = useState("landing");
   const [listingStep, setListingStep] = useState(1);
 
-  // Active Role State Management System
-  const [activeUserRole, setActiveUserRole] = useState("Public");
-  const [properties, setProperties] = useState(INITIAL_PROPERTIES);
-  
-  // Public Filter Elements
+  // Core Global States
   const [activeIntent, setActiveIntent] = useState("Rent");
   const [selectedCountry, setSelectedCountry] = useState("India");
   const [keywordSearch, setKeywordSearch] = useState("");
+  const [properties, setProperties] = useState(INITIAL_PROPERTIES);
   const [filteredProperties, setFilteredProperties] = useState([]);
+  const [availableCountries, setAvailableCountries] = useState([]);
 
-  // UI State Toggles
+  // UI State Components
   const [showMyActivityDropdown, setShowMyActivityDropdown] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
 
-  // User Activity Tracking Registries
+  // User Histories
   const [recentlySearched, setRecentlySearched] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [shortlistedList, setShortlistedList] = useState([]);
@@ -91,16 +86,26 @@ function App() {
   const [activityViewFilter, setActivityViewFilter] = useState("ALL");
   const [recoveryPhone, setRecoveryPhone] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
 
-  // Post Listing Fields
+  // Post Listing Form States
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState("Residential");
   const [newSubCategory, setNewSubCategory] = useState("Apartment");
   const [newCity, setNewCity] = useState("");
+  const [newCountry, setNewCountry] = useState("India");
+  const [newLocality, setNewLocality] = useState("");
   const [newPrice, setNewPrice] = useState("");
 
+  // Step 1: Automatically extract unique countries present in database listings
+  useEffect(() => {
+    const countriesList = [...new Set(properties.map(p => p.country))];
+    setAvailableCountries(countriesList);
+    if (countriesList.length > 0 && !countriesList.includes(selectedCountry)) {
+      setSelectedCountry(countriesList[0]);
+    }
+  }, [properties]);
+
+  // Step 2: Keep frontend search grid synced with selections
   useEffect(() => {
     const results = properties.filter(prop => {
       const matchesIntent = prop.intent === activeIntent;
@@ -115,21 +120,21 @@ function App() {
     setFilteredProperties(results);
   }, [properties, activeIntent, selectedCountry, keywordSearch]);
 
+  // Google Navigation Engine Generator Link Hook
+  const openGoogleNavigation = (mapAddress) => {
+    // Encodes destination plain-text perfectly for uniform URL architecture execution
+    const secureUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapAddress)}`;
+    window.open(secureUrl, '_blank');
+  };
+
   const executeSearchLog = () => {
     if (keywordSearch.trim() !== "" && !recentlySearched.includes(keywordSearch)) {
       setRecentlySearched([keywordSearch, ...recentlySearched.slice(0, 4)]);
     }
   };
 
-  const trackPropertyView = (property) => {
-    if (!recentlyViewed.some(p => p.id === property.id)) {
-      setRecentlyViewed([property, ...recentlyViewed.slice(0, 4)]);
-    }
-    alert(`📖 Opened Details View for: ${property.title}`);
-  };
-
   const toggleShortlistStatus = (property) => {
-    if (shortlistedList.some(p => p.id === property.id)) {
+    if (shortlistedList.some(s => s.id === property.id)) {
       setShortlistedList(shortlistedList.filter(p => p.id !== property.id));
     } else {
       setShortlistedList([property, ...shortlistedList]);
@@ -140,19 +145,40 @@ function App() {
     if (!contactedList.some(p => p.id === property.id)) {
       setContactedList([property, ...contactedList]);
     }
-    alert(`📞 Owner details requested for: ${property.title}`);
+    alert(`📞 Access Request: Owner routing for ${property.title} successfully connected.`);
   };
 
-  // Click handler to inject SEO link text directly into active search bar
-  const handleSeoLinkClick = (localityName) => {
-    setKeywordSearch(localityName);
-    window.scrollTo({ top: 200, behavior: 'smooth' });
+  // Extract localities dynamically inside specific country sectors for the automated SEO matrix
+  const getDynamicLocalities = () => {
+    const subset = properties.filter(p => p.country.toLowerCase() === selectedCountry.toLowerCase());
+    return [...new Set(subset.map(p => `${p.locality} ${p.city}`))];
+  };
+
+  const submitFinalListing = (e) => {
+    e.preventDefault();
+    const createdItem = {
+      id: properties.length + 1,
+      title: newTitle,
+      intent: activeIntent,
+      type: newType,
+      subCategory: newSubCategory,
+      locality: newLocality || "Premium Zone",
+      city: newCity,
+      country: newCountry,
+      priceDisplay: `₹${parseInt(newPrice).toLocaleString()} / month`,
+      isVerified: true,
+      mapAddress: `${newLocality || 'Center'}, ${newCity}, ${newCountry}`,
+      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=600"
+    };
+    setProperties([...properties, createdItem]);
+    alert("🎉 Global Listing Live!");
+    setCurrentPage("landing");
   };
 
   return (
-    <div style={{ backgroundColor: '#f5f7fa', minHeight: '100vh', position: 'relative' }} onClick={() => setShowMyActivityDropdown(false)}>
+    <div style={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }} onClick={() => setShowMyActivityDropdown(false)}>
       
-      {/* HEADER SHORTCUT NAVIGATION BAR */}
+      {/* GLOBAL BRAND HEADER NAVIGATION BAR */}
       <nav className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm py-3" style={{ backgroundColor: '#a81c1c' }}>
         <div className="container px-4">
           <span className="navbar-brand fs-3 fw-bold text-white me-5" onClick={() => { setCurrentPage("landing"); setActivityViewFilter("ALL"); }} style={{ cursor: 'pointer' }}>
@@ -166,10 +192,6 @@ function App() {
           </div>
 
           <div className="d-flex align-items-center">
-            {activeUserRole === "SuperAdmin" && (
-              <button className="btn btn-dark btn-sm text-warning border-warning fw-bold me-3 px-3" onClick={() => setCurrentPage("admin-panel")}>⚙️ Admin Control Panel</button>
-            )}
-
             <div className="position-relative" onClick={(e) => e.stopPropagation()}>
               <button type="button" className="btn btn-link text-white text-decoration-none me-3 fw-semibold border border-white-50 rounded px-3 py-1" style={{ fontSize: '0.92rem' }} onClick={() => setShowMyActivityDropdown(!showMyActivityDropdown)}>
                 👤 Sign In / My Activity {showMyActivityDropdown ? '▲' : '▼'}
@@ -177,12 +199,8 @@ function App() {
 
               {showMyActivityDropdown && (
                 <div className="card shadow-lg border-0 py-2 position-absolute bg-white rounded-3 mt-2 text-start" style={{ right: '15px', width: '240px', zIndex: 2000 }}>
-                  <div className="px-3 py-2 border-bottom">
-                    <button className="btn btn-sm btn-primary w-100 fw-bold rounded" onClick={() => { setShowAuthModal(true); setShowMyActivityDropdown(false); }}>LOGIN / REGISTER</button>
-                  </div>
+                  <div className="px-3 py-2 border-bottom"><button className="btn btn-sm btn-primary w-100 fw-bold rounded" onClick={() => { setShowAuthModal(true); setShowMyActivityDropdown(false); }}>LOGIN / REGISTER</button></div>
                   <div className="px-3 pt-2 small fw-bold text-primary text-uppercase" style={{ fontSize: '0.75rem' }}>My Activity</div>
-                  <button className="btn btn-link w-100 text-start text-dark text-decoration-none px-3 py-1 small" onClick={() => { setCurrentPage("landing"); setActivityViewFilter("SEARCHED"); setShowMyActivityDropdown(false); }}>🔍 Recently Searched ({recentlySearched.length})</button>
-                  <button className="btn btn-link w-100 text-start text-dark text-decoration-none px-3 py-1 small" onClick={() => { setCurrentPage("landing"); setActivityViewFilter("VIEWED"); setShowMyActivityDropdown(false); }}>👁️ Recently Viewed ({recentlyViewed.length})</button>
                   <button className="btn btn-link w-100 text-start text-dark text-decoration-none px-3 py-1 small" onClick={() => { setCurrentPage("landing"); setActivityViewFilter("SHORTLISTED"); setShowMyActivityDropdown(false); }}>❤️ Shortlisted ({shortlistedList.length})</button>
                   <div className="p-2"><button className="btn btn-sm btn-success w-100 fw-bold rounded" onClick={() => { setCurrentPage("list-property-flow"); setShowMyActivityDropdown(false); }}>Post Property FREE</button></div>
                 </div>
@@ -193,22 +211,26 @@ function App() {
         </div>
       </nav>
 
-      {/* PUBLIC EXPLORATION MAIN HOME MAP */}
+      {/* PUBLIC DISCOVERY LANDING CONSOLE */}
       {currentPage === "landing" && (
         <div>
           <header className="py-5 text-white text-center" style={{ background: "linear-gradient(rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.9)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200') center/cover", padding: "80px 0" }}>
             <div className="container">
               <h1 className="fw-bold mb-4">Global Real Estate Search Console</h1>
-              <div className="card shadow-lg p-4 mx-auto border-0 rounded-4 bg-white text-dark" style={{ maxWidth: '850px' }}>
+              <div className="card shadow-lg p-4 mx-auto border-0 rounded-4 bg-white text-dark" style={{ maxWidth: '900px' }}>
                 <div className="row g-2">
+                  
+                  {/* COMPLETELY AUTODETECTED & GLOBAL COUNTRY SELECTOR */}
                   <div className="col-md-3">
                     <select className="form-select fw-semibold" value={selectedCountry} onChange={(e) => { setSelectedCountry(e.target.value); setKeywordSearch(""); }}>
-                      <option value="India">India 🇮🇳</option>
-                      <option value="United States">United States 🇺🇸</option>
+                      {availableCountries.map((country, idx) => (
+                        <option key={idx} value={country}>{country} 🌐</option>
+                      ))}
                     </select>
                   </div>
+
                   <div className="col-md-6">
-                    <input type="text" className="form-control" placeholder="Search city, sector, or classification (e.g. Noida, Warehouse)..." value={keywordSearch} onChange={(e) => setKeywordSearch(e.target.value)} />
+                    <input type="text" className="form-control" placeholder="Search city, sector, or placement (e.g. Noida, Times Square)..." value={keywordSearch} onChange={(e) => setKeywordSearch(e.target.value)} />
                   </div>
                   <div className="col-md-3">
                     <button className="btn btn-primary w-100 fw-bold shadow-sm" style={{ backgroundColor: '#0056b3' }} onClick={executeSearchLog}>Search Hub</button>
@@ -218,29 +240,35 @@ function App() {
             </div>
           </header>
 
-          {/* DYNAMIC LISTINGS DISPLAY */}
+          {/* ASSET LIST GRID DISPLAY CARD RENDERING PLACEMENT */}
           <main className="container py-5">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h3 className="fw-bold mb-0 text-dark">
-                {activityViewFilter === "ALL" && `Verified Active Listings in ${selectedCountry} (${filteredProperties.length})`}
-                {activityViewFilter === "SHORTLISTED" && `Your Shortlisted Luxury Units (${shortlistedList.length})`}
-              </h3>
-              {activityViewFilter !== "ALL" && <button className="btn btn-outline-dark btn-sm rounded-pill fw-bold" onClick={() => setActivityViewFilter("ALL")}>Clear Activity Filter ✕</button>}
-            </div>
-
+            <h3 className="fw-bold mb-4 text-dark text-start">Available Matches in {selectedCountry} ({filteredProperties.length})</h3>
+            
             <div className="row g-4 mb-5">
               {filteredProperties.length > 0 ? (
-                (activityViewFilter === "ALL" ? filteredProperties : shortlistedList).map(property => (
+                filteredProperties.map(property => (
                   <div className="col-md-4" key={property.id}>
                     <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden bg-white position-relative">
                       <button type="button" className="btn position-absolute top-0 end-0 m-3 rounded-circle shadow p-2 bg-white" style={{ zIndex: 10, border: 'none' }} onClick={() => toggleShortlistStatus(property)}>
                         {shortlistedList.some(s => s.id === property.id) ? '❤️' : '🤍'}
                       </button>
-                      <img src={property.image} className="card-img-top" alt="" style={{ height: '200px', objectFit: 'cover' }} onClick={() => trackPropertyView(property)} />
+                      
+                      <img src={property.image} className="card-img-top" alt="" style={{ height: '200px', objectFit: 'cover' }} />
+                      
                       <div className="card-body p-4 text-start">
                         <span className="badge bg-dark text-warning mb-2 px-3 py-1 rounded-pill">{property.type} ({property.subCategory})</span>
                         <h5 className="card-title fw-bold text-dark mb-1">{property.title}</h5>
-                        <p className="card-text text-muted small mb-3">📍 {property.locality}, {property.city}</p>
+                        <p className="card-text text-muted small mb-2">📍 {property.locality}, {property.city}</p>
+                        
+                        {/* THE GOOGLE MAPS ROUTE CONNECTOR ACTION BUTTON */}
+                        <button 
+                          type="button" 
+                          className="btn btn-link p-0 text-decoration-none small text-primary fw-bold mb-3 d-block"
+                          onClick={() => openGoogleNavigation(property.mapAddress)}
+                        >
+                          🗺️ View Navigation Route from My Location →
+                        </button>
+
                         <div className="d-flex justify-content-between align-items-center border-top pt-3 mt-2">
                           <span className="fs-5 fw-bold text-success">{property.priceDisplay}</span>
                           <button className="btn btn-dark btn-sm rounded-pill px-3 fw-bold" onClick={() => logContactAction(property)}>Contact Owner</button>
@@ -254,37 +282,22 @@ function App() {
               )}
             </div>
 
-            {/* ========================================================
-                IMPROVISED HIGH-FIDELITY DYNAMIC DYNAMIC SEO LOCALITY FOOTER MATRIX
-                ======================================================== */}
+            {/* AUTOMATED GLOBAL MULTI-COUNTRY SEO FOOTER DIRECTORY CARD */}
             <div className="card border-0 shadow-sm rounded-4 p-4 mt-5 bg-white text-start">
-              <h3 className="fw-bold text-dark mb-1">Top Localities in {selectedCountry}</h3>
+              <h3 className="fw-bold text-dark mb-1">Top Active Localities in {selectedCountry}</h3>
+              <p className="text-muted small">Auto-generated crawl index for global placement matrices</p>
               
-              {/* Intent Selector Toggles */}
-              <div className="d-flex border-bottom my-3">
-                <button className={`btn fw-bold px-3 py-2 border-bottom border-3 rounded-0 ${activeIntent === 'Buy' ? 'border-primary text-primary' : 'border-transparent text-muted'}`} onClick={() => setActiveIntent("Buy")}>Buy</button>
-                <button className={`btn fw-bold px-3 py-2 border-bottom border-3 rounded-0 ${activeIntent === 'Rent' ? 'border-primary text-primary' : 'border-transparent text-muted'}`} onClick={() => setActiveIntent("Rent")}>Rent / Lease</button>
-              </div>
-
-              {/* Dynamic 3-Column Locality Matrix Engine */}
-              <div className="row g-4">
-                {SEO_LOCALITY_MAP[selectedCountry]?.categories.map((category, colIndex) => (
-                  <div className="col-md-4" key={colIndex}>
-                    <h6 className="fw-bold text-dark mb-3">{category.heading} in Top Localities of {selectedCountry}</h6>
-                    <div className="d-flex flex-column gap-2">
-                      {category.items.map((item, itemIndex) => (
-                        <button 
-                          key={itemIndex}
-                          type="button"
-                          className="btn btn-link text-start text-decoration-none p-0 text-muted small-hover fw-medium"
-                          style={{ color: '#0056b3', fontSize: '0.92rem' }}
-                          onClick={() => handleSeoLinkClick(item.split(" ")[0])}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                      <button className="btn btn-link text-start text-decoration-none p-0 text-secondary fw-semibold mt-1" style={{ fontSize: '0.85rem' }}>View 14 More →</button>
-                    </div>
+              <div className="row g-3 mt-2">
+                {getDynamicLocalities().map((loc, index) => (
+                  <div className="col-md-4" key={index}>
+                    <button 
+                      type="button" 
+                      className="btn btn-link text-start text-decoration-none p-0 fw-semibold" 
+                      style={{ color: '#0056b3' }}
+                      onClick={() => { setKeywordSearch(loc.split(" ")[0]); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
+                    >
+                      🏢 {activeIntent} in {loc}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -294,41 +307,37 @@ function App() {
         </div>
       )}
 
-      {/* RETAINED PLATFORM INTERFACES FOR RUNTIME SYSTEM INTEGRITY */}
+      {/* PROPERTY SUBMISSION WORKFLOW COVERS AD CREATION ROUTING */}
       {currentPage === "list-property-flow" && (
         <main className="container py-5 text-start">
-          <div className="mx-auto card shadow p-4 rounded-4 bg-white" style={{ maxWidth: '500px' }}>
-            <h4 className="fw-bold border-bottom pb-2">List Property Securely</h4>
-            <div className="mb-3"><label className="form-label small fw-bold">Title Name</label><input type="text" className="form-control" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Executive Corporate Hub" /></div>
-            <button className="btn btn-primary w-100 fw-bold py-2 mt-2" onClick={() => {
-              const item = { id: properties.length + 1, title: newTitle, intent: activeIntent, type: newType, subCategory: newSubCategory, locality: "Verified Hub", city: newCity, country: selectedCountry, priceDisplay: `₹50,000 / month`, isVerified: true };
-              setProperties([...properties, item]); setCurrentPage("landing"); alert("Listing pushed seamlessly!");
-            }}>Publish Space Ad</button>
-          </div>
-        </main>
-      )}
-
-      {currentPage === "admin-panel" && (
-        <main className="container py-5 text-start">
-          <h2 className="fw-bold mb-4">Platform Governance Panel</h2>
-          <div className="card shadow-sm border-0 p-4 bg-white rounded-4">
-            {properties.map(p => (
-              <div key={p.id} className="d-flex justify-content-between align-items-center border-bottom py-2">
-                <div><strong>{p.title}</strong></div>
-                <button className="btn btn-sm btn-danger fw-bold" onClick={() => setProperties(properties.filter(item => item.id !== p.id))}>Delete Listing</button>
+          <div className="mx-auto card shadow-lg border-0 p-4 rounded-4 bg-white" style={{ maxWidth: '520px' }}>
+            <h4 className="fw-bold border-bottom pb-2 mb-3">Post Property Globally</h4>
+            <form onSubmit={submitFinalListing}>
+              <div className="mb-2"><label className="form-label small fw-bold mb-1">Listing Name</label><input type="text" className="form-control" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Executive Corporate Hub" /></div>
+              <div className="row g-2 mb-2">
+                <div className="col-6">
+                  <label className="form-label small fw-bold mb-1">Country Location</label>
+                  <input type="text" className="form-control" required value={newCountry} onChange={(e) => setNewCountry(e.target.value)} placeholder="e.g. Australia" />
+                </div>
+                <div className="col-6"><label className="form-label small fw-bold mb-1">City</label><input type="text" className="form-control" required value={newCity} onChange={(e) => setNewCity(e.target.value)} placeholder="e.g. Sydney" /></div>
               </div>
-            ))}
+              <div className="row g-2 mb-3">
+                <div className="col-6"><label className="form-label small fw-bold mb-1">Locality Sector</label><input type="text" className="form-control" required value={newLocality} onChange={(e) => setNewLocality(e.target.value)} placeholder="e.g. Circular Quay" /></div>
+                <div className="col-6"><label className="form-label small fw-bold mb-1">Price</label><input type="number" className="form-control" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="e.g. 75000" /></div>
+              </div>
+              <button type="submit" className="btn btn-warning w-100 fw-bold rounded-pill text-dark shadow-sm">Publish Active Listing Globally</button>
+            </form>
           </div>
         </main>
       )}
 
-      {/* LOGIN MODAL */}
+      {/* AUTHENTICATION OVERLAY */}
       {showAuthModal && (
         <div className="modal-backdrop fade show" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card shadow border-0 p-4 bg-white rounded-4 text-start" style={{ maxWidth: '440px', width: '92%' }}>
-            <button type="button" className="btn-close position-absolute" style={{ top: '20px', right: '22px', border: 'none', background: 'none' }} onClick={() => setShowAuthModal(false)}>✕</button>
-            <h3 className="fw-bold text-dark mt-2 mb-1">Login / Register</h3>
-            <button type="button" className="btn w-100 fw-bold py-2 text-white my-3" style={{ backgroundColor: '#6cbdff' }} onClick={() => { setActiveUserRole("SuperAdmin"); setShowAuthModal(false); setCurrentPage("admin-panel"); }}>👑 Launch Super Admin Panel →</button>
+          <div className="card shadow border-0 p-4 bg-white rounded-4 text-center" style={{ maxWidth: '400px', width: '90%' }}>
+            <h3 className="fw-bold text-dark mb-4">Authentication Portal</h3>
+            <input type="number" className="form-control text-center py-2 mb-3" placeholder="Enter phone connection link" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
+            <button className="btn btn-primary w-100 fw-bold py-2 mb-2" onClick={() => setShowAuthModal(false)}>Continue</button>
           </div>
         </div>
       )}
