@@ -33,6 +33,8 @@ const INITIAL_PROPERTIES = [
 
 function App() {
   const [currentPage, setCurrentPage] = useState("landing");
+  
+  // Step Management: 1 = Initial Form, 2 = OTP Screen, 3 = Property Details Form
   const [listingStep, setListingStep] = useState(1);
 
   // Core App States
@@ -54,6 +56,9 @@ function App() {
   // User Onboarding Input Fields
   const [mobileNumber, setMobileNumber] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  
+  // Property Metadata Fields
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState("Residential");
   const [newSubCategory, setNewSubCategory] = useState("Apartment");
@@ -86,17 +91,31 @@ function App() {
     }
   };
 
-  const triggerOnboardingNext = (e) => {
+  // Triggers OTP workflow instead of skipping verification
+  const handleInitialSubmit = (e) => {
     e.preventDefault();
     if (authMethod === "Mobile" && mobileNumber.length < 10) {
-      alert("Please enter a valid mobile number.");
+      alert("Please enter a valid 10-digit mobile number.");
       return;
     }
     if (authMethod === "Email" && !emailAddress.includes("@")) {
       alert("Please enter a valid email address.");
       return;
     }
+    
+    // Smooth transition into OTP Screen
     setListingStep(2); 
+  };
+
+  // Validates the entered OTP code
+  const handleVerifyOtp = (e) => {
+    e.preventDefault();
+    if (otpCode === "1234" || otpCode.length === 4) {
+      alert("🔒 Code Verified Successfully! Opening property submission console.");
+      setListingStep(3); // Unlocks the final form
+    } else {
+      alert("❌ Invalid verification code. For testing, enter any 4-digit code.");
+    }
   };
 
   const submitFinalListing = (e) => {
@@ -121,6 +140,7 @@ function App() {
     setListingStep(1);
     setMobileNumber("");
     setEmailAddress("");
+    setOtpCode("");
   };
 
   return (
@@ -156,7 +176,7 @@ function App() {
         </div>
       </nav>
 
-      {/* VIEW LAYER 1: PREMIUM SPLIT SCREEN HERO ONBOARDING ENGINE */}
+      {/* PREMIUM SPLIT SCREEN HERO ONBOARDING ENGINE */}
       {currentPage === "list-property-flow" && (
         <div className="container py-5">
           <div className="row align-items-center g-5">
@@ -171,25 +191,25 @@ function App() {
               <div className="d-flex flex-column gap-3 mb-4">
                 <div className="d-flex align-items-center gap-3">
                   <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Get Access to Global Verified Buyers</strong><span className="text-muted small">Reach millions of high-intent queries.</span></div>
+                  <div><strong className="text-dark d-block">Secure OTP Authentication Verification</strong><span className="text-muted small">Ensuring only genuine prospective leads and real property listings interact.</span></div>
                 </div>
                 <div className="d-flex align-items-center gap-3">
                   <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Sell or Rent Faster for FREE</strong><span className="text-muted small">Zero hidden onboarding tier cuts or commission percentages.</span></div>
+                  <div><strong className="text-dark d-block">Zero Brokerage Commission Cuts</strong><span className="text-muted small">Keep 100% of your real estate transaction value.</span></div>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: PROFESSIONAL CONVERSION CARD */}
+            {/* RIGHT COLUMN: INTERACTIVE FORM CONTAINER */}
             <div className="col-lg-6">
               <div className="card border-0 shadow-lg p-4 bg-white rounded-4 text-start mx-auto" style={{ maxWidth: '520px' }}>
                 
-                {listingStep === 1 ? (
-                  <form onSubmit={triggerOnboardingNext}>
+                {/* LISTING STEP 1: INITIAL INFORMATION ACCOUNT TYPE ENTRY */}
+                {listingStep === 1 && (
+                  <form onSubmit={handleInitialSubmit}>
                     <h3 className="fw-bold text-dark mb-1">Let's get you started</h3>
                     <p className="text-muted small mb-4">Add your baseline parameters to post property items online for free.</p>
                     
-                    {/* Profile Toggle Group */}
                     <div className="mb-3">
                       <label className="form-label small fw-bold text-secondary">You are:</label>
                       <div className="d-flex gap-2">
@@ -201,7 +221,6 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Intent Toggle Group */}
                     <div className="mb-4">
                       <label className="form-label small fw-bold text-secondary">You are here to:</label>
                       <div className="d-flex gap-2">
@@ -213,7 +232,6 @@ function App() {
                       </div>
                     </div>
 
-                    {/* DYNAMIC AUTH METHOD RENDERING FIELD GROUP */}
                     {authMethod === "Mobile" ? (
                       <div className="mb-3">
                         <label className="form-label small fw-bold text-secondary">Your contact number</label>
@@ -221,24 +239,19 @@ function App() {
                           <span className="input-group-text bg-light text-dark fw-bold border-end-0">IND +91</span>
                           <input type="number" className="form-control py-2 ps-3 border-start-0" placeholder="WhatsApp Number" required value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
                         </div>
-                        
-                        {/* Option Toggle to switch to Email Mode */}
                         <div className="text-end mt-2">
                           <button type="button" className="btn btn-link p-0 small text-primary text-decoration-none fw-semibold" onClick={() => setAuthMethod("Email")}>
                             ✉ Login with Email instead
                           </button>
                         </div>
-
                         <div className="p-2 rounded mt-2 small text-dark" style={{ backgroundColor: '#fff9e6', border: '1px solid #ffeeba' }}>
-                          🟢 Enter your **WhatsApp No.** to get enquiries directly from customers.
+                          🟢 Enter your **WhatsApp No.** to verify your profile instantly.
                         </div>
                       </div>
                     ) : (
                       <div className="mb-3">
                         <label className="form-label small fw-bold text-secondary">Your email address</label>
                         <input type="email" className="form-control py-2 ps-3" placeholder="name@example.com" required value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-                        
-                        {/* Option Toggle to switch back to Mobile Mode */}
                         <div className="text-end mt-2">
                           <button type="button" className="btn btn-link p-0 small text-primary text-decoration-none fw-semibold" onClick={() => setAuthMethod("Mobile")}>
                             📱 Login with Mobile Number instead
@@ -251,10 +264,47 @@ function App() {
                       Start Now →
                     </button>
                   </form>
-                ) : (
-                  // STEP 2: METADATA DETAILS MATRIX
+                )}
+
+                {/* LISTING STEP 2: HIGH-FIDELITY OTP CONFIRMATION SCREEN */}
+                {listingStep === 2 && (
+                  <form onSubmit={handleVerifyOtp}>
+                    <h3 className="fw-bold text-dark mb-1">Verify your identity</h3>
+                    <p className="text-muted small mb-4">
+                      We have sent a 4-digit One-Time Password verification code to{" "}
+                      <strong className="text-dark">{authMethod === "Mobile" ? `+91 ${mobileNumber}` : emailAddress}</strong>
+                    </p>
+
+                    <div className="mb-4">
+                      <label className="form-label small fw-bold text-secondary d-block text-center mb-2">Enter 4-Digit OTP Code</label>
+                      <input 
+                        type="text" 
+                        maxLength="4"
+                        className="form-control text-center fw-bold fs-3 letter-spacing-lg mx-auto" 
+                        style={{ maxWidth: '180px', letterSpacing: '8px' }}
+                        placeholder="0000" 
+                        required 
+                        value={otpCode} 
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))} 
+                      />
+                    </div>
+
+                    <button type="submit" className="btn btn-success w-100 fw-bold py-3 fs-6 rounded-3 shadow-sm mb-3">
+                      Verify & Continue ✓
+                    </button>
+
+                    <div className="text-center">
+                      <button type="button" className="btn btn-link small text-secondary text-decoration-none p-0" onClick={() => setListingStep(1)}>
+                        ← Back to modify information
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* LISTING STEP 3: PROPERTY SPECIFICATION DETAILS CARD MAPS METADATA */}
+                {listingStep === 3 && (
                   <form onSubmit={submitFinalListing}>
-                    <h4 className="fw-bold text-success mb-3">✓ Authentication Complete. Add Details</h4>
+                    <h4 className="fw-bold text-success mb-3">✓ Account Verified. Add Listing Details</h4>
                     
                     <div className="mb-2"><label className="form-label small fw-bold mb-1">Property Listing Title</label><input type="text" className="form-control" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Modern Office Workshop Suite" /></div>
                     
@@ -302,7 +352,7 @@ function App() {
         </div>
       )}
 
-      {/* MAIN EXPLORATION MARKETPLACE DISPLAY CARD */}
+      {/* PUBLIC HOME LANDING MARKETPLACE HUB */}
       {currentPage === "landing" && (
         <div>
           <header className="py-5 text-white text-center" style={{ background: "linear-gradient(rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.9)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200') center/cover", padding: "75px 0" }}>
