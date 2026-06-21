@@ -34,7 +34,7 @@ const INITIAL_PROPERTIES = [
 function App() {
   const [currentPage, setCurrentPage] = useState("landing");
   
-  // Step Management: 1 = Initial Form, 2 = OTP Screen, 3 = Property Details Form
+  // Step Management Matrix: 1 = Baseline Initial, 2 = OTP Gateway, 3 = Create Account Modal, 4 = Listing Form
   const [listingStep, setListingStep] = useState(1);
 
   // Core App States
@@ -47,7 +47,7 @@ function App() {
 
   // Form Configuration States
   const [userProfile, setUserProfile] = useState("Owner"); 
-  const [authMethod, setAuthMethod] = useState("Mobile"); // "Mobile" or "Email"
+  const [authMethod, setAuthMethod] = useState("Mobile");
 
   // UI State Components
   const [showMyActivityDropdown, setShowMyActivityDropdown] = useState(false);
@@ -57,6 +57,11 @@ function App() {
   const [mobileNumber, setMobileNumber] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  
+  // New Account Fields (Matching image_17ca1f.png)
+  const [fullName, setFullName] = useState("");
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
   
   // Property Metadata Fields
   const [newTitle, setNewTitle] = useState("");
@@ -91,7 +96,6 @@ function App() {
     }
   };
 
-  // Triggers OTP workflow instead of skipping verification
   const handleInitialSubmit = (e) => {
     e.preventDefault();
     if (authMethod === "Mobile" && mobileNumber.length < 10) {
@@ -102,20 +106,29 @@ function App() {
       alert("Please enter a valid email address.");
       return;
     }
-    
-    // Smooth transition into OTP Screen
     setListingStep(2); 
   };
 
-  // Validates the entered OTP code
   const handleVerifyOtp = (e) => {
     e.preventDefault();
-    if (otpCode === "1234" || otpCode.length === 4) {
-      alert("🔒 Code Verified Successfully! Opening property submission console.");
-      setListingStep(3); // Unlocks the final form
+    if (otpCode.length === 4) {
+      // Moves directly to the Create Account Profile Completer Step
+      setListingStep(3); 
     } else {
-      alert("❌ Invalid verification code. For testing, enter any 4-digit code.");
+      alert("Please enter a 4-digit code.");
     }
+  };
+
+  // Validates user profile completion variables
+  const handleCreateAccountSubmit = (e) => {
+    e.preventDefault();
+    if (!termsAgreed) {
+      setShowTermsError(true);
+      return;
+    }
+    setShowTermsError(false);
+    alert(`🎉 Profile created for ${fullName}! Moving to property placement form.`);
+    setListingStep(4); // Unlocks the final listing data entry form
   };
 
   const submitFinalListing = (e) => {
@@ -141,6 +154,8 @@ function App() {
     setMobileNumber("");
     setEmailAddress("");
     setOtpCode("");
+    setFullName("");
+    setTermsAgreed(false);
   };
 
   return (
@@ -191,20 +206,20 @@ function App() {
               <div className="d-flex flex-column gap-3 mb-4">
                 <div className="d-flex align-items-center gap-3">
                   <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Secure OTP Authentication Verification</strong><span className="text-muted small">Ensuring only genuine prospective leads and real property listings interact.</span></div>
+                  <div><strong className="text-dark d-block">Verified High-Trust Marketplace Profiles</strong><span className="text-muted small">Ensuring end-to-end transparency across real estate listing logs.</span></div>
                 </div>
                 <div className="d-flex align-items-center gap-3">
                   <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Zero Brokerage Commission Cuts</strong><span className="text-muted small">Keep 100% of your real estate transaction value.</span></div>
+                  <div><strong className="text-dark d-block">Dynamic Map Routing Nodes</strong><span className="text-muted small">Customers see instant directions from their exact location to your space.</span></div>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: INTERACTIVE FORM CONTAINER */}
+            {/* RIGHT COLUMN: DYNAMIC ONBOARDING COMPONENT INTERFACE CARD */}
             <div className="col-lg-6">
-              <div className="card border-0 shadow-lg p-4 bg-white rounded-4 text-start mx-auto" style={{ maxWidth: '520px' }}>
+              <div className="card border-0 shadow-lg p-4 bg-white rounded-4 text-start mx-auto" style={{ maxWidth: '440px' }}>
                 
-                {/* LISTING STEP 1: INITIAL INFORMATION ACCOUNT TYPE ENTRY */}
+                {/* STAGE 1: ACCOUNT INTENT DEFINITION */}
                 {listingStep === 1 && (
                   <form onSubmit={handleInitialSubmit}>
                     <h3 className="fw-bold text-dark mb-1">Let's get you started</h3>
@@ -244,9 +259,6 @@ function App() {
                             ✉ Login with Email instead
                           </button>
                         </div>
-                        <div className="p-2 rounded mt-2 small text-dark" style={{ backgroundColor: '#fff9e6', border: '1px solid #ffeeba' }}>
-                          🟢 Enter your **WhatsApp No.** to verify your profile instantly.
-                        </div>
                       </div>
                     ) : (
                       <div className="mb-3">
@@ -266,51 +278,84 @@ function App() {
                   </form>
                 )}
 
-                {/* LISTING STEP 2: HIGH-FIDELITY OTP CONFIRMATION SCREEN */}
+                {/* STAGE 2: OTP SECURITY CHALLENGE MODULE */}
                 {listingStep === 2 && (
                   <form onSubmit={handleVerifyOtp}>
                     <h3 className="fw-bold text-dark mb-1">Verify your identity</h3>
-                    <p className="text-muted small mb-4">
-                      We have sent a 4-digit One-Time Password verification code to{" "}
-                      <strong className="text-dark">{authMethod === "Mobile" ? `+91 ${mobileNumber}` : emailAddress}</strong>
-                    </p>
+                    <p className="text-muted small mb-4">We have sent a 4-digit verification code to <strong className="text-dark">{authMethod === "Mobile" ? `+91 ${mobileNumber}` : emailAddress}</strong></p>
 
                     <div className="mb-4">
-                      <label className="form-label small fw-bold text-secondary d-block text-center mb-2">Enter 4-Digit OTP Code</label>
-                      <input 
-                        type="text" 
-                        maxLength="4"
-                        className="form-control text-center fw-bold fs-3 letter-spacing-lg mx-auto" 
-                        style={{ maxWidth: '180px', letterSpacing: '8px' }}
-                        placeholder="0000" 
-                        required 
-                        value={otpCode} 
-                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))} 
-                      />
+                      <input type="text" maxLength="4" className="form-control text-center fw-bold fs-3 mx-auto" style={{ maxWidth: '160px', letterSpacing: '6px' }} placeholder="0000" required value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))} />
                     </div>
 
-                    <button type="submit" className="btn btn-success w-100 fw-bold py-3 fs-6 rounded-3 shadow-sm mb-3">
-                      Verify & Continue ✓
-                    </button>
-
-                    <div className="text-center">
-                      <button type="button" className="btn btn-link small text-secondary text-decoration-none p-0" onClick={() => setListingStep(1)}>
-                        ← Back to modify information
-                      </button>
-                    </div>
+                    <button type="submit" className="btn btn-success w-100 fw-bold py-3 fs-6 rounded-3 shadow-sm mb-3">Verify & Continue ✓</button>
                   </form>
                 )}
 
-                {/* LISTING STEP 3: PROPERTY SPECIFICATION DETAILS CARD MAPS METADATA */}
+                {/* STAGE 3: ACCOUNT CREATION INTERFACE PANEL (MATCHES IMAGE_17CA1F) */}
                 {listingStep === 3 && (
+                  <form onSubmit={handleCreateAccountSubmit}>
+                    <h3 className="fw-bold text-dark mb-3 fs-4">Create Account</h3>
+                    
+                    {/* User Profile Selector (Owner / Broker Toggle Match) */}
+                    <div className="mb-3">
+                      <label className="form-label small text-muted mb-1">You are</label>
+                      <div className="d-flex gap-2">
+                        <button type="button" className={`btn rounded-pill px-4 py-1 fw-semibold ${userProfile === 'Owner' ? 'btn-outline-dark bg-dark text-white' : 'btn-outline-secondary'}`} onClick={() => setUserProfile('Owner')}>Owner</button>
+                        <button type="button" className={`btn rounded-pill px-4 py-1 fw-semibold ${userProfile === 'Broker' ? 'btn-outline-primary bg-light' : 'btn-outline-secondary'}`} onClick={() => setUserProfile('Broker')}>Broker</button>
+                      </div>
+                    </div>
+
+                    {/* Name Input field */}
+                    <div className="mb-3">
+                      <input type="text" className="form-control py-2 text-muted" placeholder="Full Name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    </div>
+
+                    {/* Locked Contact Block Field */}
+                    <div className="mb-2">
+                      <label className="form-label p-0 m-0 text-muted" style={{ fontSize: '0.75rem' }}>Phone Number</label>
+                      <div className="input-group">
+                        <span className="input-group-text bg-light text-muted border-end-0 small">+91 ▾</span>
+                        <input type="text" className="form-control bg-light text-muted border-start-0" disabled value={mobileNumber || "7905635297"} />
+                        <span className="input-group-text bg-light text-muted border-start-0">🔒</span>
+                      </div>
+                      <button type="button" className="btn btn-link p-0 small text-decoration-none mt-1" style={{ fontSize: '0.82rem' }} onClick={() => setListingStep(1)}>Change Number ⓘ</button>
+                    </div>
+
+                    {/* Secondary Email Verification Block field */}
+                    <div className="mb-3">
+                      <input type="email" className="form-control py-2 text-muted" placeholder="Email Id" required value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
+                    </div>
+
+                    {/* Terms Checklist Match Group */}
+                    <div className="form-check mb-3">
+                      <input className="form-check-input" type="checkbox" id="termsCheck" checked={termsAgreed} onChange={(e) => setTermsAgreed(e.target.checked)} />
+                      <label className="form-check-label text-muted" htmlFor="termsCheck" style={{ fontSize: '0.78rem' }}>
+                        I agree to the <span className="text-primary">Terms & Conditions</span> and <span className="text-primary">Privacy Policy</span>
+                      </label>
+                      {showTermsError && (
+                        <div className="text-danger mt-1 small fw-bold" style={{ fontSize: '0.78rem' }}>
+                          ⚠️ This is required for creating an account
+                        </div>
+                      )}
+                    </div>
+
+                    <button type="submit" className="btn btn-primary w-100 fw-bold py-2 fs-5 rounded-3 shadow-sm" style={{ backgroundColor: '#7bb7f1', border: 'none' }}>
+                      Create Account
+                    </button>
+                  </form>
+                )}
+
+                {/* STAGE 4: MAIN LISTING PROPERTY ATTRIBUTES DETAILS METADATA FORM */}
+                {listingStep === 4 && (
                   <form onSubmit={submitFinalListing}>
-                    <h4 className="fw-bold text-success mb-3">✓ Account Verified. Add Listing Details</h4>
+                    <h4 className="fw-bold text-success mb-3">✓ Account Active. Add Property Specifications</h4>
                     
                     <div className="mb-2"><label className="form-label small fw-bold mb-1">Property Listing Title</label><input type="text" className="form-control" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Modern Office Workshop Suite" /></div>
                     
                     <div className="row g-2 mb-2">
                       <div className="col-6">
-                        <label className="form-label small fw-bold mb-1">Category Classification</label>
+                        <label className="form-label small fw-bold mb-1">Category</label>
                         <select className="form-select" value={newType} onChange={(e) => { setNewType(e.target.value); setNewSubCategory(e.target.value === 'Commercial' ? 'Warehouse' : 'Apartment'); }}>
                           <option value="Residential">Residential</option><option value="Commercial">Commercial</option>
                         </select>
@@ -352,7 +397,7 @@ function App() {
         </div>
       )}
 
-      {/* PUBLIC HOME LANDING MARKETPLACE HUB */}
+      {/* MAIN EXPLORATION MARKETPLACE REPO DISPLAY GRID */}
       {currentPage === "landing" && (
         <div>
           <header className="py-5 text-white text-center" style={{ background: "linear-gradient(rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.9)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200') center/cover", padding: "75px 0" }}>
