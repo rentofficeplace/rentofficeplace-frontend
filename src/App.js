@@ -34,40 +34,33 @@ const INITIAL_PROPERTIES = [
 function App() {
   const [currentPage, setCurrentPage] = useState("landing");
   
-  // Step Management Matrix: 1 = Baseline Initial, 2 = OTP Gateway, 3 = Create Account Modal, 4 = Listing Form
+  // App Phase Workflow: 1 = Initial Form, 2 = OTP, 3 = Multi-Step Form Dashboard
   const [listingStep, setListingStep] = useState(1);
+  
+  // Dashboard Core Sub-steps (Matching image_17b779.png left timeline)
+  const [formSubStep, setFormSubStep] = useState(1); 
 
   // Core App States
-  const [activeIntent, setActiveIntent] = useState("Rent");
+  const [activeIntent, setActiveIntent] = useState("Sell"); // Sell, Rent / Lease, PG
   const [selectedCountry, setSelectedCountry] = useState("India");
   const [keywordSearch, setKeywordSearch] = useState("");
   const [properties, setProperties] = useState(INITIAL_PROPERTIES);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [availableCountries, setAvailableCountries] = useState([]);
 
-  // Form Configuration States
-  const [userProfile, setUserProfile] = useState("Owner"); 
-  const [authMethod, setAuthMethod] = useState("Mobile");
-
   // UI State Components
   const [showMyActivityDropdown, setShowMyActivityDropdown] = useState(false);
   const [shortlistedList, setShortlistedList] = useState([]);
 
-  // User Onboarding Input Fields
+  // Auth Inputs
   const [mobileNumber, setMobileNumber] = useState("");
-  const [emailAddress, setEmailAddress] = useState("");
   const [otpCode, setOtpCode] = useState("");
   
-  // New Account Fields (Matching image_17ca1f.png)
-  const [fullName, setFullName] = useState("");
-  const [termsAgreed, setTermsAgreed] = useState(false);
-  const [showTermsError, setShowTermsError] = useState(false);
-  
-  // Property Metadata Fields
+  // Property Metadata Form Fields (Matching layout metrics)
+  const [propertyType, setPropertyType] = useState("Residential"); // Residential or Commercial
+  const [subCategory, setSubCategory] = useState("Flat/Apartment");
   const [newTitle, setNewTitle] = useState("");
-  const [newType, setNewType] = useState("Residential");
-  const [newSubCategory, setNewSubCategory] = useState("Apartment");
-  const [newCity, setNewCity] = useState("");
+  const [newCity, setNewCity] = useState("Gurugram");
   const [newCountry, setNewCountry] = useState("India");
   const [newLocality, setNewLocality] = useState("");
   const [newPrice, setNewPrice] = useState("");
@@ -79,10 +72,11 @@ function App() {
 
   useEffect(() => {
     const results = properties.filter(prop => {
-      const matchesIntent = prop.intent === activeIntent;
+      const matchIntent = activeIntent === "Sell" ? "Buy" : activeIntent;
+      const matchesIntent = prop.intent === matchIntent;
       const matchesCountry = prop.country.toLowerCase() === selectedCountry.toLowerCase();
       const cleanQuery = keywordSearch.toLowerCase().trim();
-      return prop.isVerified && matchesIntent && matchesCountry &&
+      return prop.isVerified && matchesCountry &&
         (cleanQuery === "" || prop.city.toLowerCase().includes(cleanQuery) || prop.locality.toLowerCase().includes(cleanQuery));
     });
     setFilteredProperties(results);
@@ -98,12 +92,8 @@ function App() {
 
   const handleInitialSubmit = (e) => {
     e.preventDefault();
-    if (authMethod === "Mobile" && mobileNumber.length < 10) {
-      alert("Please enter a valid 10-digit mobile number.");
-      return;
-    }
-    if (authMethod === "Email" && !emailAddress.includes("@")) {
-      alert("Please enter a valid email address.");
+    if (mobileNumber.length < 10) {
+      alert("Please enter a valid mobile number.");
       return;
     }
     setListingStep(2); 
@@ -112,284 +102,271 @@ function App() {
   const handleVerifyOtp = (e) => {
     e.preventDefault();
     if (otpCode.length === 4) {
-      // Moves directly to the Create Account Profile Completer Step
+      // Skips Account Creation completely because the user profile is recognized!
       setListingStep(3); 
+      setFormSubStep(1);
     } else {
-      alert("Please enter a 4-digit code.");
+      alert("Please enter a 4-digit verification code.");
     }
-  };
-
-  // Validates user profile completion variables
-  const handleCreateAccountSubmit = (e) => {
-    e.preventDefault();
-    if (!termsAgreed) {
-      setShowTermsError(true);
-      return;
-    }
-    setShowTermsError(false);
-    alert(`🎉 Profile created for ${fullName}! Moving to property placement form.`);
-    setListingStep(4); // Unlocks the final listing data entry form
   };
 
   const submitFinalListing = (e) => {
     e.preventDefault();
     const createdItem = {
       id: properties.length + 1,
-      title: newTitle,
-      intent: activeIntent,
-      type: newType,
-      subCategory: newSubCategory,
-      locality: newLocality || "Premium District",
+      title: newTitle || `${propertyType} ${subCategory} in ${newLocality || 'Premium Sector'}`,
+      intent: activeIntent === "Sell" ? "Buy" : activeIntent,
+      type: propertyType,
+      subCategory: subCategory,
+      locality: newLocality || "Sector 45",
       city: newCity,
       country: newCountry,
-      priceDisplay: `${newCountry === 'India' ? '₹' : '$'}${parseInt(newPrice).toLocaleString()} / month`,
+      priceDisplay: `${newCountry === 'India' ? '₹' : '$'}${parseInt(newPrice || '45000').toLocaleString()} / month`,
       isVerified: true,
-      mapAddress: `${newLocality || 'Center'}, ${newCity}, ${newCountry}`,
+      mapAddress: `${newLocality || 'Sector 45'}, ${newCity}, ${newCountry}`,
       image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=600"
     };
     setProperties([...properties, createdItem]);
-    alert("🎉 Listing published successfully live onto global grid nodes!");
+    alert("🎉 Listing published live onto your marketplace search index channels!");
     setCurrentPage("landing");
     setListingStep(1);
+    setFormSubStep(1);
     setMobileNumber("");
-    setEmailAddress("");
     setOtpCode("");
-    setFullName("");
-    setTermsAgreed(false);
+    setNewTitle("");
+    setNewLocality("");
+    setNewPrice("");
   };
 
   return (
-    <div style={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }} onClick={() => setShowMyActivityDropdown(false)}>
+    <div style={{ backgroundColor: '#f4f6f9', minHeight: '100vh' }} onClick={() => setShowMyActivityDropdown(false)}>
       
-      {/* BRAND HEADER NAVIGATION */}
-      <nav className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm py-3" style={{ backgroundColor: '#a81c1c' }}>
+      {/* GLOBAL BRAND HEADER TOP NAVIGATION */}
+      <nav className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm py-3" style={{ backgroundColor: '#0056b3' }}>
         <div className="container px-4">
           <span className="navbar-brand fs-3 fw-bold text-white me-5" onClick={() => { setCurrentPage("landing"); }} style={{ cursor: 'pointer' }}>
-            Rent<span style={{color: '#D4AF37'}}>Office</span>Place
+            rent<span style={{color: '#99ccff'}}>office</span>place
           </span>
-
-          <div className="d-flex align-items-center me-auto">
-            <button className="btn btn-link text-white fw-bold text-decoration-none px-3 fs-6" onClick={() => { setCurrentPage("landing"); setActiveIntent("Buy"); }}>Buy ▾</button>
-            <button className="btn btn-link text-white fw-bold text-decoration-none px-3 fs-6" onClick={() => { setCurrentPage("landing"); setActiveIntent("Rent"); }}>Rent ▾</button>
-            <button className="btn btn-link text-white fw-bold text-decoration-none px-3 fs-6" onClick={() => { setCurrentPage("list-property-flow"); setListingStep(1); }}>Sell ▾</button>
-          </div>
-
           <div className="d-flex align-items-center">
-            <div className="position-relative" onClick={(e) => e.stopPropagation()}>
-              <button type="button" className="btn btn-link text-white text-decoration-none me-3 fw-semibold border border-white-50 rounded px-3 py-1" style={{ fontSize: '0.92rem' }} onClick={() => setShowMyActivityDropdown(!showMyActivityDropdown)}>
-                👤 My Activity {showMyActivityDropdown ? '▲' : '▼'}
-              </button>
-              {showMyActivityDropdown && (
-                <div className="card shadow-lg border-0 py-2 position-absolute bg-white rounded-3 mt-2 text-start" style={{ right: '15px', width: '220px', zIndex: 2000 }}>
-                  <button className="btn btn-link w-100 text-start text-dark text-decoration-none px-3 py-1 small" onClick={() => { setCurrentPage("landing"); setShowMyActivityDropdown(false); }}>❤️ Shortlisted ({shortlistedList.length})</button>
-                  <div className="p-2 border-top mt-2"><button className="btn btn-sm btn-success w-100 fw-bold rounded" onClick={() => { setCurrentPage("list-property-flow"); setListingStep(1); setShowMyActivityDropdown(false); }}>Post Property FREE</button></div>
-                </div>
-              )}
-            </div>
-            <button className="btn fw-bold px-3 py-1 rounded-3" style={{ backgroundColor: '#d4af37', color: '#1a1a1a', border: 'none' }} onClick={() => { setCurrentPage("list-property-flow"); setListingStep(1); }}>Post Property <span className="badge bg-dark text-warning ms-1 small">FREE</span></button>
+            <button className="btn fw-bold px-4 py-2 rounded-3 text-white border border-white-50" onClick={() => { setCurrentPage("list-property-flow"); setListingStep(1); }}>Post Property FREE</button>
           </div>
         </div>
       </nav>
 
-      {/* PREMIUM SPLIT SCREEN HERO ONBOARDING ENGINE */}
-      {currentPage === "list-property-flow" && (
-        <div className="container py-5">
-          <div className="row align-items-center g-5">
+      {/* PHASE 1: LOGIN & OTP STAGES */}
+      {currentPage === "list-property-flow" && listingStep < 3 && (
+        <div className="container py-5 text-start" style={{ maxWidth: '480px' }}>
+          <div className="card p-4 border-0 shadow-lg bg-white rounded-4">
+            {listingStep === 1 ? (
+              <form onSubmit={handleInitialSubmit}>
+                <h3 className="fw-bold text-dark mb-3">Post Property Online</h3>
+                <div className="mb-4">
+                  <label className="form-label small fw-semibold text-secondary">Enter Mobile Number</label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-light fw-bold">+91</span>
+                    <input type="number" className="form-control py-2 ps-2" placeholder="7905635297" required value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
+                  </div>
+                </div>
+                <button type="submit" className="btn btn-primary w-100 py-2 fw-bold">Start Now →</button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp}>
+                <h4 className="fw-bold text-dark mb-2">Verify OTP</h4>
+                <p className="text-muted small">Enter code sent to +91 {mobileNumber}</p>
+                <input type="text" maxLength="4" className="form-control text-center fw-bold fs-3 mb-4 mx-auto" style={{ maxWidth: '150px' }} placeholder="0000" required value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))} />
+                <button type="submit" className="btn btn-success w-100 py-2 fw-bold">Verify Code</button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* PHASE 2: HIGH-FIDELITY 5-STEP LISTING CONSOLE (EXACT MATCH FOR IMAGE_17B779) */}
+      {currentPage === "list-property-flow" && listingStep === 3 && (
+        <div className="container-fluid py-4 px-md-5">
+          <div className="row g-4">
             
-            {/* LEFT COLUMN: BRAND MARKETING */}
-            <div className="col-lg-6 text-start d-none d-lg-block">
-              <h1 className="fw-bold text-dark display-4 mb-3" style={{ lineHeight: '1.2' }}>
-                Post your property Ad to sell or rent online for <span className="text-success">Free!</span>
-              </h1>
-              <p className="fs-5 text-muted mb-4">Join thousands of verified owners closing premium global real estate placements daily.</p>
-              
-              <div className="d-flex flex-column gap-3 mb-4">
-                <div className="d-flex align-items-center gap-3">
-                  <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Verified High-Trust Marketplace Profiles</strong><span className="text-muted small">Ensuring end-to-end transparency across real estate listing logs.</span></div>
+            {/* LEFT COLUMN COMPONENT: TIMELINE PROGRESS PANEL */}
+            <div className="col-lg-3 text-start">
+              <div className="card border-0 shadow-sm p-4 bg-white rounded-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div className="d-flex flex-column gap-4 position-relative">
+                    {[
+                      { step: 1, label: "Basic Details" },
+                      { step: 2, label: "Location Details" },
+                      { step: 3, label: "Property Profile" },
+                      { step: 4, label: "Photos, Videos & Voice-over" },
+                      { step: 5, label: "Pricing & Others" }
+                    ].map((item) => (
+                      <div key={item.step} className="d-flex align-items-center gap-3">
+                        <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm`} 
+                             style={{ 
+                               width: '32px', 
+                               height: '32px', 
+                               backgroundColor: formSubStep === item.step ? '#0056b3' : formSubStep > item.step ? '#198754' : '#ced4da',
+                               fontSize: '0.85rem'
+                             }}>
+                          {formSubStep > item.step ? '✓' : item.step}
+                        </div>
+                        <div>
+                          <span className={`d-block small fw-bold ${formSubStep === item.step ? 'text-dark' : 'text-muted'}`}>{item.label}</span>
+                          <span className="text-muted text-uppercase" style={{ fontSize: '0.68rem' }}>Step {item.step}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="d-flex align-items-center gap-3">
-                  <span className="bg-white shadow-sm p-2 rounded-circle fs-4">✓</span>
-                  <div><strong className="text-dark d-block">Dynamic Map Routing Nodes</strong><span className="text-muted small">Customers see instant directions from their exact location to your space.</span></div>
+
+                {/* Bottom Circular Progress Indicator */}
+                <div className="border-top pt-4 mt-5 d-flex align-items-center gap-3">
+                  <div className="position-relative d-inline-block text-center">
+                    <div className="fw-bold fs-4 text-dark p-2 bg-light rounded-circle border" style={{ width: '60px', height: '60px', lineHeight: '42px', fontSize: '0.95rem' }}>
+                      {Math.round(((formSubStep - 1) / 5) * 100)}%
+                    </div>
+                  </div>
+                  <div>
+                    <h6 className="fw-bold text-dark mb-0 style-score">Property Score</h6>
+                    <p className="text-muted small mb-0">Better score yields higher search visibility metrics.</p>
+                  </div>
                 </div>
+
               </div>
             </div>
 
-            {/* RIGHT COLUMN: DYNAMIC ONBOARDING COMPONENT INTERFACE CARD */}
-            <div className="col-lg-6">
-              <div className="card border-0 shadow-lg p-4 bg-white rounded-4 text-start mx-auto" style={{ maxWidth: '440px' }}>
-                
-                {/* STAGE 1: ACCOUNT INTENT DEFINITION */}
-                {listingStep === 1 && (
-                  <form onSubmit={handleInitialSubmit}>
-                    <h3 className="fw-bold text-dark mb-1">Let's get you started</h3>
-                    <p className="text-muted small mb-4">Add your baseline parameters to post property items online for free.</p>
-                    
-                    <div className="mb-3">
-                      <label className="form-label small fw-bold text-secondary">You are:</label>
+            {/* MIDDLE COLUMN COMPONENT: MAIN INTERACTIVE CONFIGURATION PANEL */}
+            <div className="col-lg-6 text-start">
+              <div className="card border-0 shadow-sm p-4 bg-white rounded-4 min-vh-50">
+                <h2 className="fw-bold text-dark fs-3 mb-1">Welcome back Himendra Yadav,</h2>
+                <p className="text-muted fs-5 mb-4">Fill out basic details</p>
+
+                {/* STEP MODULE 1: BASIC DETAILS PANEL */}
+                {formSubStep === 1 && (
+                  <div>
+                    {/* Operational Intent Selection Toggles */}
+                    <div className="mb-4">
+                      <label className="form-label small fw-bold text-secondary d-block mb-2">I'm looking to</label>
                       <div className="d-flex gap-2">
-                        {["Owner", "Agent", "Builder"].map(profile => (
-                          <button key={profile} type="button" className={`btn rounded-pill px-4 py-2 small fw-semibold transition-all ${userProfile === profile ? 'btn-dark' : 'btn-outline-secondary'}`} onClick={() => setUserProfile(profile)}>
-                            {profile}
+                        {["Sell", "Rent / Lease", "PG"].map((option) => (
+                          <button key={option} type="button" 
+                                  className={`btn rounded-pill px-4 py-2 small fw-semibold transition-all ${activeIntent === option ? 'btn-primary shadow-sm' : 'btn-outline-secondary'}`}
+                                  onClick={() => setActiveIntent(option)}>
+                            {option}
                           </button>
                         ))}
                       </div>
                     </div>
 
+                    {/* Major Category Radio Group */}
                     <div className="mb-4">
-                      <label className="form-label small fw-bold text-secondary">You are here to:</label>
-                      <div className="d-flex gap-2">
-                        {["Rent", "Buy", "PG"].map(intentOption => (
-                          <button key={intentOption} type="button" className={`btn rounded-pill px-3 py-2 small fw-semibold ${activeIntent === intentOption ? 'btn-dark' : 'btn-outline-secondary'}`} onClick={() => setActiveIntent(intentOption)}>
-                            {intentOption === 'Rent' ? 'Rent / Lease' : intentOption === 'Buy' ? 'Sell Property' : 'List as PG'}
-                          </button>
-                        ))}
+                      <label className="form-label small fw-bold text-secondary d-block mb-2">What kind of property do you have?</label>
+                      <div className="d-flex gap-4 mb-3">
+                        <label className="fw-semibold text-dark fs-6" style={{ cursor: 'pointer' }}>
+                          <input type="radio" name="propType" checked={propertyType === "Residential"} className="form-check-input me-2" onChange={() => { setPropertyType("Residential"); setSubCategory("Flat/Apartment"); }} /> Residential
+                        </label>
+                        <label className="fw-semibold text-dark fs-6" style={{ cursor: 'pointer' }}>
+                          <input type="radio" name="propType" checked={propertyType === "Commercial"} className="form-check-input me-2" onChange={() => { setPropertyType("Commercial"); setSubCategory("Office Space"); }} /> Commercial
+                        </label>
                       </div>
-                    </div>
 
-                    {authMethod === "Mobile" ? (
-                      <div className="mb-3">
-                        <label className="form-label small fw-bold text-secondary">Your contact number</label>
-                        <div className="input-group">
-                          <span className="input-group-text bg-light text-dark fw-bold border-end-0">IND +91</span>
-                          <input type="number" className="form-control py-2 ps-3 border-start-0" placeholder="WhatsApp Number" required value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
-                        </div>
-                        <div className="text-end mt-2">
-                          <button type="button" className="btn btn-link p-0 small text-primary text-decoration-none fw-semibold" onClick={() => setAuthMethod("Email")}>
-                            ✉ Login with Email instead
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mb-3">
-                        <label className="form-label small fw-bold text-secondary">Your email address</label>
-                        <input type="email" className="form-control py-2 ps-3" placeholder="name@example.com" required value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-                        <div className="text-end mt-2">
-                          <button type="button" className="btn btn-link p-0 small text-primary text-decoration-none fw-semibold" onClick={() => setAuthMethod("Mobile")}>
-                            📱 Login with Mobile Number instead
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <button type="submit" className="btn btn-danger w-100 fw-bold py-3 fs-5 rounded-3 shadow mt-2" style={{ backgroundColor: '#df2020', border: 'none' }}>
-                      Start Now →
-                    </button>
-                  </form>
-                )}
-
-                {/* STAGE 2: OTP SECURITY CHALLENGE MODULE */}
-                {listingStep === 2 && (
-                  <form onSubmit={handleVerifyOtp}>
-                    <h3 className="fw-bold text-dark mb-1">Verify your identity</h3>
-                    <p className="text-muted small mb-4">We have sent a 4-digit verification code to <strong className="text-dark">{authMethod === "Mobile" ? `+91 ${mobileNumber}` : emailAddress}</strong></p>
-
-                    <div className="mb-4">
-                      <input type="text" maxLength="4" className="form-control text-center fw-bold fs-3 mx-auto" style={{ maxWidth: '160px', letterSpacing: '6px' }} placeholder="0000" required value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))} />
-                    </div>
-
-                    <button type="submit" className="btn btn-success w-100 fw-bold py-3 fs-6 rounded-3 shadow-sm mb-3">Verify & Continue ✓</button>
-                  </form>
-                )}
-
-                {/* STAGE 3: ACCOUNT CREATION INTERFACE PANEL (MATCHES IMAGE_17CA1F) */}
-                {listingStep === 3 && (
-                  <form onSubmit={handleCreateAccountSubmit}>
-                    <h3 className="fw-bold text-dark mb-3 fs-4">Create Account</h3>
-                    
-                    {/* User Profile Selector (Owner / Broker Toggle Match) */}
-                    <div className="mb-3">
-                      <label className="form-label small text-muted mb-1">You are</label>
-                      <div className="d-flex gap-2">
-                        <button type="button" className={`btn rounded-pill px-4 py-1 fw-semibold ${userProfile === 'Owner' ? 'btn-outline-dark bg-dark text-white' : 'btn-outline-secondary'}`} onClick={() => setUserProfile('Owner')}>Owner</button>
-                        <button type="button" className={`btn rounded-pill px-4 py-1 fw-semibold ${userProfile === 'Broker' ? 'btn-outline-primary bg-light' : 'btn-outline-secondary'}`} onClick={() => setUserProfile('Broker')}>Broker</button>
-                      </div>
-                    </div>
-
-                    {/* Name Input field */}
-                    <div className="mb-3">
-                      <input type="text" className="form-control py-2 text-muted" placeholder="Full Name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                    </div>
-
-                    {/* Locked Contact Block Field */}
-                    <div className="mb-2">
-                      <label className="form-label p-0 m-0 text-muted" style={{ fontSize: '0.75rem' }}>Phone Number</label>
-                      <div className="input-group">
-                        <span className="input-group-text bg-light text-muted border-end-0 small">+91 ▾</span>
-                        <input type="text" className="form-control bg-light text-muted border-start-0" disabled value={mobileNumber || "7905635297"} />
-                        <span className="input-group-text bg-light text-muted border-start-0">🔒</span>
-                      </div>
-                      <button type="button" className="btn btn-link p-0 small text-decoration-none mt-1" style={{ fontSize: '0.82rem' }} onClick={() => setListingStep(1)}>Change Number ⓘ</button>
-                    </div>
-
-                    {/* Secondary Email Verification Block field */}
-                    <div className="mb-3">
-                      <input type="email" className="form-control py-2 text-muted" placeholder="Email Id" required value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-                    </div>
-
-                    {/* Terms Checklist Match Group */}
-                    <div className="form-check mb-3">
-                      <input className="form-check-input" type="checkbox" id="termsCheck" checked={termsAgreed} onChange={(e) => setTermsAgreed(e.target.checked)} />
-                      <label className="form-check-label text-muted" htmlFor="termsCheck" style={{ fontSize: '0.78rem' }}>
-                        I agree to the <span className="text-primary">Terms & Conditions</span> and <span className="text-primary">Privacy Policy</span>
-                      </label>
-                      {showTermsError && (
-                        <div className="text-danger mt-1 small fw-bold" style={{ fontSize: '0.78rem' }}>
-                          ⚠️ This is required for creating an account
-                        </div>
-                      )}
-                    </div>
-
-                    <button type="submit" className="btn btn-primary w-100 fw-bold py-2 fs-5 rounded-3 shadow-sm" style={{ backgroundColor: '#7bb7f1', border: 'none' }}>
-                      Create Account
-                    </button>
-                  </form>
-                )}
-
-                {/* STAGE 4: MAIN LISTING PROPERTY ATTRIBUTES DETAILS METADATA FORM */}
-                {listingStep === 4 && (
-                  <form onSubmit={submitFinalListing}>
-                    <h4 className="fw-bold text-success mb-3">✓ Account Active. Add Property Specifications</h4>
-                    
-                    <div className="mb-2"><label className="form-label small fw-bold mb-1">Property Listing Title</label><input type="text" className="form-control" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Modern Office Workshop Suite" /></div>
-                    
-                    <div className="row g-2 mb-2">
-                      <div className="col-6">
-                        <label className="form-label small fw-bold mb-1">Category</label>
-                        <select className="form-select" value={newType} onChange={(e) => { setNewType(e.target.value); setNewSubCategory(e.target.value === 'Commercial' ? 'Warehouse' : 'Apartment'); }}>
-                          <option value="Residential">Residential</option><option value="Commercial">Commercial</option>
-                        </select>
-                      </div>
-                      <div className="col-6">
-                        <label className="form-label small fw-bold mb-1">Sub-Type</label>
-                        {newType === 'Commercial' ? (
-                          <select className="form-select" value={newSubCategory} onChange={(e) => setNewSubCategory(e.target.value)}>
-                            <option value="Warehouse">Warehouse 📦</option><option value="Office">Office Space 🏢</option><option value="Shop">Shop Suite 🛍️</option>
-                          </select>
+                      {/* Capsule Sub-type Grid Matrix */}
+                      <div className="d-flex flex-wrap gap-2 mt-2">
+                        {propertyType === "Residential" ? (
+                          ["Flat/Apartment", "Independent House / Villa", "Independent / Builder Floor", "Plot / Land", "1 RK/ Studio Apartment", "Serviced Apartment", "Farmhouse", "Other"].map((cat) => (
+                            <button key={cat} type="button" className={`btn rounded-pill px-3 py-2 small ${subCategory === cat ? 'btn-outline-primary bg-light fw-bold' : 'btn-outline-secondary text-muted'}`} onClick={() => setSubCategory(cat)} style={{ fontSize: '0.85rem' }}>
+                              {cat}
+                            </button>
+                          ))
                         ) : (
-                          <select className="form-select" value={newSubCategory} onChange={(e) => setNewSubCategory(e.target.value)}>
-                            <option value="Apartment">Apartment Flat</option><option value="Villa">Independent Villa</option>
-                          </select>
+                          ["Office Space", "Co-working Space", "Shop / Showroom", "Warehouse", "Industrial Land", "Factory"].map((cat) => (
+                            <button key={cat} type="button" className={`btn rounded-pill px-3 py-2 small ${subCategory === cat ? 'btn-outline-primary bg-light fw-bold' : 'btn-outline-secondary text-muted'}`} onClick={() => setSubCategory(cat)} style={{ fontSize: '0.85rem' }}>
+                              {cat}
+                            </button>
+                          ))
                         )}
                       </div>
                     </div>
 
-                    <div className="row g-2 mb-2">
-                      <div className="col-6"><label className="form-label small fw-bold mb-1">Target Country</label><input type="text" className="form-control" required value={newCountry} onChange={(e) => setNewCountry(e.target.value)} placeholder="e.g. India" /></div>
-                      <div className="col-6"><label className="form-label small fw-bold mb-1">City Name</label><input type="text" className="form-control" required value={newCity} onChange={(e) => setNewCity(e.target.value)} placeholder="e.g. Noida" /></div>
-                    </div>
-
-                    <div className="row g-2 mb-4">
-                      <div className="col-6"><label className="form-label small fw-bold mb-1">Locality Sector</label><input type="text" className="form-control" required value={newLocality} onChange={(e) => setNewLocality(e.target.value)} placeholder="e.g. Sector 62" /></div>
-                      <div className="col-6"><label className="form-label small fw-bold mb-1">Monthly Valuation</label><input type="number" className="form-control" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="e.g. 55000" /></div>
-                    </div>
-
-                    <button type="submit" className="btn btn-success w-100 fw-bold py-2 rounded-pill shadow-sm">
-                      Publish Listing On Marketplace
+                    <button type="button" className="btn btn-primary fw-bold px-5 py-3 mt-4 rounded-3 text-white fs-5" style={{ minWidth: '160px' }} onClick={() => setFormSubStep(2)}>
+                      Continue
                     </button>
+                  </div>
+                )}
+
+                {/* STEP MODULE 2: LOCATION DETAILS */}
+                {formSubStep === 2 && (
+                  <div>
+                    <h5 className="fw-bold mb-3 text-dark">🎯 Step 2: Location Details</h5>
+                    <div className="row g-3 mb-4">
+                      <div className="col-6"><label className="form-label small fw-bold text-secondary">Country</label><input type="text" className="form-control" value={newCountry} onChange={(e) => setNewCountry(e.target.value)} /></div>
+                      <div className="col-6"><label className="form-label small fw-bold text-secondary">City</label><input type="text" className="form-control" value={newCity} onChange={(e) => setNewCity(e.target.value)} /></div>
+                      <div className="col-12"><label className="form-label small fw-bold text-secondary">Locality / Sector Zone Address</label><input type="text" className="form-control" placeholder="e.g. DLF Phase 3 or Sector 45" required value={newLocality} onChange={(e) => setNewLocality(e.target.value)} /></div>
+                    </div>
+                    <div className="d-flex gap-2"><button type="button" className="btn btn-outline-secondary px-4" onClick={() => setFormSubStep(1)}>Back</button><button type="button" className="btn btn-primary px-4" onClick={() => setFormSubStep(3)}>Continue</button></div>
+                  </div>
+                )}
+
+                {/* STEP MODULE 3: PROPERTY PROFILE */}
+                {formSubStep === 3 && (
+                  <div>
+                    <h5 className="fw-bold mb-3 text-dark">📋 Step 3: Property Profile</h5>
+                    <div className="mb-4">
+                      <label className="form-label small fw-bold text-secondary">Property Marketing Custom Title</label>
+                      <input type="text" className="form-control" placeholder="e.g. Fully Premium Furnished Office Workspace Suite" required value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+                    </div>
+                    <div className="d-flex gap-2"><button type="button" className="btn btn-outline-secondary px-4" onClick={() => setFormSubStep(2)}>Back</button><button type="button" className="btn btn-primary px-4" onClick={() => setFormSubStep(4)}>Continue</button></div>
+                  </div>
+                )}
+
+                {/* STEP MODULE 4: PHOTOS & MEDIA */}
+                {formSubStep === 4 && (
+                  <div>
+                    <h5 className="fw-bold mb-3 text-dark">🖼️ Step 4: Photos, Videos & Voice-over</h5>
+                    <div className="p-5 text-center border rounded-4 mb-4 bg-light" style={{ borderStyle: 'dashed' }}>
+                      <span className="fs-1 d-block mb-2">📸</span>
+                      <p className="fw-bold mb-1 text-dark">Upload Real Media Assets</p>
+                      <p className="small text-muted mb-0">Drag and drop images here to boost conversion score vectors by up to 40%.</p>
+                    </div>
+                    <div className="d-flex gap-2"><button type="button" className="btn btn-outline-secondary px-4" onClick={() => setFormSubStep(3)}>Back</button><button type="button" className="btn btn-primary px-4" onClick={() => setFormSubStep(5)}>Continue</button></div>
+                  </div>
+                )}
+
+                {/* STEP MODULE 5: PRICING DETAILS */}
+                {formSubStep === 5 && (
+                  <form onSubmit={submitFinalListing}>
+                    <h5 className="fw-bold mb-3 text-dark">💰 Step 5: Pricing & Others</h5>
+                    <div className="mb-4">
+                      <label className="form-label small fw-bold text-secondary">Expected Monthly Lease/Sale Valuation</label>
+                      <input type="number" className="form-control form-control-lg text-dark fw-bold" placeholder="e.g. 65000" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} />
+                    </div>
+                    <div className="d-flex gap-2"><button type="button" className="btn btn-outline-secondary px-4" onClick={() => setFormSubStep(4)}>Back</button><button type="submit" className="btn btn-success px-5 fw-bold text-white shadow-sm">Publish Active Listing Globally</button></div>
                   </form>
                 )}
 
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN COMPONENT: SIDEBAR MARKETING TIERS */}
+            <div className="col-lg-3 text-start">
+              <div className="card border-0 shadow-sm p-4 bg-white rounded-4 mb-3">
+                <h6 className="fw-bold text-uppercase text-secondary tracking-wider small mb-3" style={{ fontSize: '0.75rem' }}>🔔 Limited-Time Residential Offers</h6>
+                <div className="p-3 rounded-3 bg-light border mb-3 position-relative overflow-hidden">
+                  <span className="badge bg-primary position-absolute text-white" style={{ top: '10px', right: '-15px', transform: 'rotate(45deg)', padding: '4px 20px', fontSize: '0.62rem' }}>RENT</span>
+                  <h6 className="fw-bold text-dark small mb-2">Residential Rent offers</h6>
+                  <p className="small text-muted mb-1"><strong>75% off</strong> for rent upto ₹15,000</p>
+                  <p className="small text-muted mb-0"><strong>50% off</strong> for rent above ₹15,000</p>
+                </div>
+                <div className="p-3 rounded-3 bg-light border position-relative overflow-hidden">
+                  <span className="badge bg-danger position-absolute text-white" style={{ top: '10px', right: '-15px', transform: 'rotate(45deg)', padding: '4px 20px', fontSize: '0.62rem' }}>SALE</span>
+                  <h6 className="fw-bold text-dark small mb-2">Residential Resale offers</h6>
+                  <p className="small text-muted mb-0"><strong>50% off</strong> for price up to ₹50 Lakh</p>
+                </div>
+                <div className="text-center text-muted mt-3" style={{ fontSize: '0.7rem' }}>* offers valid till 30 Sep'26</div>
+              </div>
+
+              <div className="card border-0 shadow-sm p-3 bg-light rounded-3 text-center">
+                <p className="small text-muted mb-1 fw-semibold">Need help?</p>
+                <p className="small mb-0 text-dark" style={{ fontSize: '0.8rem' }}>📧 services@rentofficeplace.com</p>
+                <p className="small mb-0 fw-bold text-primary" style={{ fontSize: '0.82rem' }}>📞 1800 41 99099 (Toll-Free)</p>
               </div>
             </div>
 
@@ -397,7 +374,7 @@ function App() {
         </div>
       )}
 
-      {/* MAIN EXPLORATION MARKETPLACE REPO DISPLAY GRID */}
+      {/* CORE MARKETPLACE CONSUMER LANDING PAGE */}
       {currentPage === "landing" && (
         <div>
           <header className="py-5 text-white text-center" style={{ background: "linear-gradient(rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.9)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200') center/cover", padding: "75px 0" }}>
