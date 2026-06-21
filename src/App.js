@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// Global mock data including Commercial, Residential, PG, and Hostels
 const MOCK_PROPERTIES = [
   {
     id: 1,
@@ -11,6 +10,8 @@ const MOCK_PROPERTIES = [
     city: "Noida",
     country: "India",
     priceDisplay: "₹85,000 / month",
+    facilities: "High-Speed Wi-Fi, 24/7 Power Backup, Conference Room",
+    offer: "10% off on 12-month lease",
     image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600"
   },
   {
@@ -22,51 +23,9 @@ const MOCK_PROPERTIES = [
     city: "Gurugram",
     country: "India",
     priceDisplay: "₹65,000 / month",
+    facilities: "Modular Kitchen, Swimming Pool, Gym Access",
+    offer: "Zero Brokerage fee",
     image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=600"
-  },
-  {
-    id: 3,
-    title: "Premium Boys & Girls Single PG",
-    intent: "Rent",
-    type: "PG",
-    locality: "Sector 22, Noida",
-    city: "Noida",
-    country: "India",
-    priceDisplay: "₹12,500 / month",
-    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=600"
-  },
-  {
-    id: 4,
-    title: "Global Student Co-Living Hostel",
-    intent: "Rent",
-    type: "Hostels",
-    locality: "Near Delhi University",
-    city: "Delhi",
-    country: "India",
-    priceDisplay: "₹8,000 / month",
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=600"
-  },
-  {
-    id: 5,
-    title: "Modern Co-Working Smart Desk",
-    intent: "Rent",
-    type: "Commercial",
-    locality: "CBD, Sydney",
-    city: "Sydney",
-    country: "Australia",
-    priceDisplay: "$450 / month",
-    image: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?q=80&w=600"
-  },
-  {
-    id: 6,
-    title: "Backpackers International Hostel",
-    intent: "Rent",
-    type: "Hostels",
-    locality: "Downtown Sydney",
-    city: "Sydney",
-    country: "Australia",
-    priceDisplay: "$35 / night",
-    image: "https://images.unsplash.com/photo-1626125345510-4603468eedfb?q=80&w=600"
   }
 ];
 
@@ -75,40 +34,54 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState("India"); 
   const [citySearch, setCitySearch] = useState(""); 
   const [propertyType, setPropertyType] = useState("Commercial");
+  const [properties, setProperties] = useState(MOCK_PROPERTIES);
   const [filteredProperties, setFilteredProperties] = useState([]);
-  const [detectedLocationMsg, setDetectedLocationMsg] = useState("Detecting your location...");
+  
+  // Listing Form State Variables
+  const [formTitle, setFormTitle] = useState("");
+  const [formIntent, setFormIntent] = useState("Rent");
+  const [formType, setFormType] = useState("Commercial");
+  const [formCity, setFormCity] = useState("");
+  const [formCountry, setFormCountry] = useState("India");
+  const [formPrice, setFormPrice] = useState("");
+  const [formFacilities, setFormFacilities] = useState("");
+  const [formOffer, setFormOffer] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [validationError, setValidationError] = useState("");
 
-  // IP Geolocation Engine
   useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then(response => response.json())
-      .then(data => {
-        if (data.country_name) {
-          setSelectedCountry(data.country_name);
-          setDetectedLocationMsg(`📍 Auto-detected location: ${data.city}, ${data.country_name}`);
-          
-          // Show initial matches based on auto-detected country
-          const initialMatches = MOCK_PROPERTIES.filter(prop => 
-            prop.country.toLowerCase() === data.country_name.toLowerCase() &&
-            prop.intent === activeIntent &&
-            prop.type === propertyType
-          );
-          setFilteredProperties(initialMatches);
-        }
-      })
-      .catch(err => {
-        console.error("Location detection failed:", err);
-        setDetectedLocationMsg("📍 Location detection unavailable. Showing default (India).");
-        handleSearch();
-      });
-  }, []);
+    handleSearch();
+  }, [properties, selectedCountry, propertyType, activeIntent]);
+
+  // Image Upload Quality Control Guardrail
+  const handleImageChange = (e) => {
+    setValidationError("");
+    const files = Array.from(e.target.files);
+
+    // Limit Check: 4 to 5 images maximum
+    if (files.length < 4 || files.length > 5) {
+      setValidationError("❌ Structural Rule: You must upload between 4 and 5 high-quality images.");
+      e.target.value = ""; 
+      return;
+    }
+
+    // High Quality Check: Ensure images are at least 1MB to verify resolution
+    for (let file of files) {
+      if (file.size < 1024 * 1024) { // 1 MegaByte limit
+        setValidationError(`❌ Quality Alert: "${file.name}" is too low resolution. Please upload crisp images above 1MB.`);
+        e.target.value = "";
+        return;
+      }
+    }
+
+    setSelectedImages(files);
+  };
 
   const handleSearch = () => {
-    const results = MOCK_PROPERTIES.filter(prop => {
+    const results = properties.filter(prop => {
       const matchesIntent = prop.intent === activeIntent;
       const matchesType = prop.type === propertyType;
       const matchesCountry = prop.country.toLowerCase() === selectedCountry.toLowerCase();
-      
       const cleanCity = citySearch.toLowerCase().trim();
       const matchesCity = cleanCity === "" || prop.city.toLowerCase().includes(cleanCity);
 
@@ -117,111 +90,137 @@ function App() {
     setFilteredProperties(results);
   };
 
+  const handleCreateListing = (e) => {
+    e.preventDefault();
+    if (selectedImages.length === 0) {
+      setValidationError("❌ Verification Failure: Images are completely missing.");
+      return;
+    }
+
+    const newListing = {
+      id: properties.length + 1,
+      title: formTitle,
+      intent: formIntent,
+      type: formType,
+      locality: "Verified Premium Zone",
+      city: formCity,
+      country: formCountry,
+      priceDisplay: `₹${parseInt(formPrice).toLocaleString()} / month`,
+      facilities: formFacilities,
+      offer: formOffer,
+      image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=600" // Fallback high-res cover placeholder
+    };
+
+    setProperties([...properties, newListing]);
+    
+    // Clear Form Fields
+    setFormTitle(""); setFormCity(""); setFormPrice(""); setFormFacilities(""); setFormOffer(""); setSelectedImages([]);
+    alert("Listing submitted successfully for validation!");
+  };
+
   return (
     <div style={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
-      {/* BRAND HEADER */}
       <nav className="navbar navbar-expand-lg bg-dark navbar-dark py-3">
         <div className="container">
           <span className="fs-3 fw-bold text-white">Rent<span style={{color: '#D4AF37'}}>Office</span>Place</span>
-          <span className="badge bg-secondary p-2 rounded">{detectedLocationMsg}</span>
         </div>
       </nav>
 
-      {/* SEARCH CONTAINER */}
-      <header className="py-5 text-white text-center" style={{
-        background: "linear-gradient(rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.9)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200') center/cover",
-        padding: "80px 0"
-      }}>
-        <div className="container">
-          <h1 className="fw-bold mb-4">Global Commercial, Residential & Co-Living Gateway</h1>
-
-          <div className="mx-auto" style={{ maxWidth: '900px' }}>
-            {/* INTENT SELECTION */}
-            <div className="d-flex bg-light p-1 rounded-top-4 d-inline-flex shadow">
-              <button className={`btn px-4 fw-bold ${activeIntent === 'Rent' ? 'btn-warning' : 'btn-light text-muted'}`} onClick={() => setActiveIntent('Rent')}>Rent</button>
-              <button className={`btn px-4 fw-bold ${activeIntent === 'Buy' ? 'btn-warning' : 'btn-light text-muted'}`} onClick={() => setActiveIntent('Buy')}>Buy</button>
-            </div>
-
-            {/* BAR WIDGET */}
-            <div className="card shadow p-4 bg-white text-dark border-0 rounded-bottom-4 rounded-end-4">
+      {/* RENDER DASHBOARD CORE MAP */}
+      <main className="container py-5">
+        <div className="row g-4">
+          
+          {/* LEFT SIDE: DISCOVER MARKETPLACE FILTERS */}
+          <div className="col-md-7">
+            <div className="card shadow-sm p-4 bg-white border-0 rounded-4 mb-4">
+              <h4 className="fw-bold text-dark mb-3">Filter Listings</h4>
               <div className="row g-2">
-                
-                {/* COUNTRY TARGET DROPDOWN */}
-                <div className="col-md-3">
-                  <label className="form-label small fw-bold text-muted mb-1 text-start d-block">Country Target</label>
-                  <select className="form-select fw-semibold" value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
-                    <option value="India">India 🇮🇳</option>
-                    <option value="United States">United States 🇺🇸</option>
-                    <option value="Australia">Australia 🇦🇺</option>
-                  </select>
-                </div>
-
-                {/* INNER CITY TEXT FILTER */}
                 <div className="col-md-4">
-                  <label className="form-label small fw-bold text-muted mb-1 text-start d-block">Search Local City</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="e.g. Noida, Sydney, Delhi" 
-                    value={citySearch}
-                    onChange={(e) => setCitySearch(e.target.value)}
-                  />
-                </div>
-
-                {/* EXPANDED PROPERTY TYPE DROPDOWN */}
-                <div className="col-md-3">
-                  <label className="form-label small fw-bold text-muted mb-1 text-start d-block">Property Type</label>
-                  <select className="form-select fw-semibold" value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
-                    <option value="Commercial">Commercial Space</option>
-                    <option value="Residential">Residential Flat</option>
-                    <option value="PG">PG (Paying Guest)</option>
-                    <option value="Hostels">Hostels</option>
+                  <select className="form-select" value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
+                    <option value="India">India 🇮🇳</option>
                   </select>
                 </div>
-
-                {/* CALL TO ACTION */}
-                <div className="col-md-2 d-flex align-items-end">
-                  <button className="btn btn-primary w-100 fw-bold py-2" onClick={handleSearch} style={{ backgroundColor: '#0056b3' }}>
-                    Search
-                  </button>
+                <div className="col-md-4">
+                  <select className="form-select" value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Residential">Residential</option>
+                  </select>
                 </div>
-
+                <div className="col-md-4">
+                  <input type="text" className="form-control" placeholder="Search City..." value={citySearch} onChange={(e) => setCitySearch(e.target.value)} />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {/* RENDER DYNAMIC CARD MAP */}
-      <main className="container py-5">
-        <h3 className="fw-bold mb-4 text-dark">Available Matches in {selectedCountry} ({filteredProperties.length})</h3>
-        <div className="row g-4">
-          {filteredProperties.length > 0 ? (
-            filteredProperties.map(property => (
-              <div className="col-md-4" key={property.id}>
-                <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden bg-white">
-                  <img src={property.image} className="card-img-top" alt={property.title} style={{ height: '200px', objectFit: 'cover' }} />
-                  <div className="card-body p-4">
-                    <span className={`badge mb-2 ${
-                      property.type === 'Commercial' ? 'bg-danger' : 
-                      property.type === 'Residential' ? 'bg-success' : 
-                      property.type === 'PG' ? 'bg-warning text-dark' : 'bg-info text-dark'
-                    }`}>{property.type}</span>
-                    <h5 className="card-title fw-bold text-dark">{property.title}</h5>
-                    <p className="card-text text-muted">📍 {property.locality}, {property.city}</p>
-                    <div className="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+            <h4 className="fw-bold mb-3 text-dark">Verified Matches ({filteredProperties.length})</h4>
+            {filteredProperties.map(property => (
+              <div className="card mb-3 shadow-sm border-0 rounded-4 overflow-hidden bg-white" key={property.id}>
+                <div className="row g-0">
+                  <div className="col-md-4">
+                    <img src={property.image} className="img-fluid h-100 w-100" style={{ objectFit: 'cover' }} alt="Property" />
+                  </div>
+                  <div className="col-md-8 p-4">
+                    <h5 className="fw-bold text-dark mb-1">{property.title}</h5>
+                    <p className="text-muted small mb-2">📍 {property.locality}, {property.city}</p>
+                    <p className="small text-secondary mb-1">💼 **Facilities:** {property.facilities}</p>
+                    {property.offer && <p className="small text-danger mb-3">🔥 **Offer:** {property.offer}</p>}
+                    <div className="d-flex justify-content-between align-items-center border-top pt-2">
                       <span className="fs-5 fw-bold text-success">{property.priceDisplay}</span>
-                      <button className="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold">Enquire Now</button>
+                      <button className="btn btn-dark btn-sm rounded-pill px-3 fw-bold">Enquire</button>
                     </div>
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="col-12 text-center py-5">
-              <p className="text-muted fs-5">No listings found matching these filters in {selectedCountry}. Try changing the category selection or location parameters!</p>
+            ))}
+          </div>
+
+          {/* RIGHT SIDE: ADVANCED PREVENTATIVE FORM GATEWAY */}
+          <div className="col-md-5">
+            <div className="card shadow border-0 rounded-4 p-4 bg-white sticky-top" style={{ top: '20px' }}>
+              <h4 className="fw-bold text-dark mb-1">List Your Property</h4>
+              <p className="text-muted small mb-4">Anti-Fraud Protection Enabled</p>
+
+              {validationError && <div className="alert alert-danger p-2 small fw-semibold mb-3">{validationError}</div>}
+
+              <form onSubmit={handleCreateListing}>
+                <div className="mb-2">
+                  <label className="form-label small fw-bold mb-1">Property Title</label>
+                  <input type="text" className="form-control form-control-sm" required value={formTitle} onChange={(e) => setFormTitle(e.target.value)} placeholder="e.g. Premium Executive Business Suite" />
+                </div>
+                <div className="row g-2 mb-2">
+                  <div className="col-6">
+                    <label className="form-label small fw-bold mb-1">Property Type</label>
+                    <select className="form-select form-select-sm" value={formType} onChange={(e) => setFormType(e.target.value)}>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Residential">Residential</option>
+                    </select>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small fw-bold mb-1">City Location</label>
+                    <input type="text" className="form-control form-control-sm" required value={formCity} onChange={(e) => setFormCity(e.target.value)} placeholder="e.g. Noida" />
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <label className="form-label small fw-bold mb-1">Monthly Price (INR)</label>
+                  <input type="number" className="form-control form-control-sm" required value={formPrice} onChange={(e) => setFormPrice(e.target.value)} placeholder="e.g. 75000" />
+                </div>
+                <div className="mb-2">
+                  <label className="form-label small fw-bold mb-1">Facilities Provided</label>
+                  <input type="text" className="form-control form-control-sm" required value={formFacilities} onChange={(e) => setFormFacilities(e.target.value)} placeholder="Wi-Fi, AC, Parking, Elevators" />
+                </div>
+                <div className="mb-2">
+                  <label className="form-label small fw-bold mb-1">Special Deal / Offer</label>
+                  <input type="text" className="form-control form-control-sm" value={formOffer} onChange={(e) => setFormOffer(e.target.value)} placeholder="e.g. First month half rent" />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label small fw-bold mb-1 text-primary">Upload Premium Images (4-5 Photos Allowed, Min 1MB each)</label>
+                  <input type="file" className="form-control form-control-sm" multiple accept="image/*" required onChange={handleImageChange} />
+                </div>
+                <button type="submit" className="btn btn-warning w-100 fw-bold rounded-pill text-dark shadow-sm">Submit Secure Listing</button>
+              </form>
             </div>
-          )}
+          </div>
+
         </div>
       </main>
     </div>
