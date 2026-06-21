@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// Premium Mock Data for Initial Setup & Visual Engineering
 const MOCK_PROPERTIES = [
   {
     id: 1,
@@ -52,30 +51,20 @@ function App() {
 
   return (
     <div>
-      {/* HEADER NAVIGATION */}
-      <nav className="navbar navbar-expand-lg bg-premium-dark navbar-dark py-3 border-bottom border-warning">
+      <nav className="navbar navbar-expand-lg bg-dark navbar-dark py-3">
         <div className="container">
           <span className="fs-3 fw-bold text-white">Rent<span style={{color: '#D4AF37'}}>Office</span>Place</span>
-          <div className="collapse navbar-collapse">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item"><a className="nav-link text-white mx-2" href="#explore">Explore Spaces</a></li>
-              <li className="nav-item ms-3"><button className="btn btn-outline-light me-2">Login</button></li>
-              <li className="nav-item"><button className="btn btn-warning px-4 fw-bold">Register</button></li>
-            </ul>
-          </div>
         </div>
       </nav>
 
-      {/* HERO HERO CONTAINER */}
-      <header className="hero-section text-center text-white py-5" style={{
+      <header className="text-center text-white py-5" style={{
         background: "linear-gradient(rgba(10,25,47,0.85), rgba(10,25,47,0.95)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200') center/cover",
-        padding: "100px 0"
+        padding: "80px 0"
       }}>
         <div className="container py-4">
           <h1 className="display-4 fw-bold">Global Property Marketplace</h1>
           <p className="lead text-light mb-4">Find Luxury Commercial & Premium Residential Spaces Instantly</p>
           
-          {/* INTERACTIVE FILTERS */}
           <div className="card shadow p-4 mx-auto text-dark rounded-4" style={{ maxWidth: '900px' }}>
             <div className="row g-2">
               <div className="col-md-3">
@@ -110,109 +99,28 @@ function App() {
         </div>
       </header>
 
-      {/* PROPERTIES DISPLAY GRID */}
-      <main className="container py-5" id="explore">
+      <main className="container py-5">
         <h2 className="text-center fw-bold mb-4">Featured Verified Properties</h2>
         <div className="row g-4">
-          {filteredProperties.length > 0 ? (
-            filteredProperties.map(property => (
-              <div className="col-md-4" key={property.id}>
-                <div className="card h-100 shadow-sm rounded-3 border-0">
-                  <img src={property.image} className="card-img-top rounded-top-3" alt={property.title} style={{ height: '220px', objectFit: 'cover' }} />
-                  <div className="card-body">
-                    <span className={`badge mb-2 ${property.type === 'Commercial' ? 'bg-danger' : 'bg-success'}`}>{property.type}</span>
-                    <h5 className="card-title fw-bold">{property.title}</h5>
-                    <p className="card-text text-muted mb-1">📍 {property.city}, {property.country}</p>
-                    <p className="card-text text-secondary mb-3">📐 Size: {property.size}</p>
-                    <div className="d-flex justify-content-between align-items-center border-top pt-3">
-                      <span className="fs-5 fw-bold text-dark">{property.price}</span>
-                      <button className="btn btn-sm btn-outline-dark fw-bold">View Details</button>
-                    </div>
+          {filteredProperties.map(property => (
+            <div className="col-md-4" key={property.id}>
+              <div className="card h-100 shadow-sm rounded-3 border-0">
+                <img src={property.image} className="card-img-top" alt={property.title} style={{ height: '220px', objectFit: 'cover' }} />
+                <div className="card-body">
+                  <span className={`badge mb-2 ${property.type === 'Commercial' ? 'bg-danger' : 'bg-success'}`}>{property.type}</span>
+                  <h5 className="card-title fw-bold">{property.title}</h5>
+                  <p className="card-text text-muted mb-1">📍 {property.city}, {property.country}</p>
+                  <p className="card-text text-secondary mb-3">📐 Size: {property.size}</p>
+                  <div className="d-flex justify-content-between align-items-center border-top pt-3">
+                    <span className="fs-5 fw-bold text-dark">{property.price}</span>
+                    <button className="btn btn-sm btn-outline-dark fw-bold">View Details</button>
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="col-12 text-center py-5">
-              <p className="text-muted fs-5">No properties matching your specific filters were found.</p>
             </div>
-          )}
+          ))}
         </div>
       </main>
-    </div>
-  );
-}
-
-export default App;import React, { useState, useEffect } from 'react';
-
-function App() {
-  // LINK TO YOUR LIVE AWS BACKEND SERVER
-  const BACKEND_URL = "https://Rentofficeplace-backend-env.eba-2yqegvud.ap-southeast-2.elasticbeanstalk.com";
-  
-  const [serverStatus, setServerStatus] = useState("Connecting to AWS API...");
-
-  useEffect(() => {
-    fetch(BACKEND_URL + '/')
-      .then(res => res.text())
-      .then(data => setServerStatus(data))
-      .catch(err => setServerStatus("Offline or loading connection..."));
-  }, []);
-
-  return (
-    <div>
-      {/* HEADER SECTION */}
-      <nav className="navbar navbar-expand-lg bg-premium-dark navbar-dark py-3 border-bottom border-warning">
-        <div className="container">
-          <a className="navbar-brand d-flex align-items-center" href="#home">
-            <span className="fs-3 fw-bold text-white">Rent<span className="text-gold">Office</span>Place</span>
-          </a>
-          <div className="collapse navbar-collapse">
-            <ul className="navbar-nav ms-auto align-items-center">
-              <li className="nav-item"><a className="nav-link text-white mx-2" href="#commercial">Commercial</a></li>
-              <li className="nav-item"><a className="nav-link text-white mx-2" href="#residential">Residential</a></li>
-              <li className="nav-item"><a className="nav-link text-white mx-2" href="#hostels">Hostel & PG</a></li>
-              <li className="nav-item ms-3"><button className="btn btn-outline-light me-2">Login</button></li>
-              <li className="nav-item"><button className="btn btn-gold px-4">Register</button></li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-      {/* HERO SECTION */}
-      <header className="hero-section text-center">
-        <div className="container">
-          <h1 className="display-4 fw-bold">Global Commercial & Residential Property Marketplace</h1>
-          <p className="lead text-light mb-4">Find Your Perfect Space Anywhere in the World</p>
-          
-          {/* SEARCH CARD */}
-          <div className="card shadow p-4 mx-auto text-dark rounded-4" style={{ maxWidth: '900px' }}>
-            <div className="row g-2">
-              <div className="col-md-3">
-                <input type="text" className="form-control" placeholder="Country (e.g. India)" />
-              </div>
-              <div className="col-md-3">
-                <input type="text" className="form-control" placeholder="City (e.g. Noida)" />
-              </div>
-              <div className="col-md-3">
-                <select className="form-select">
-                  <option>Commercial</option>
-                  <option>Residential</option>
-                </select>
-              </div>
-              <div className="col-md-3">
-                <button className="btn btn-gold w-100">Search Spaces</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* SYSTEM INTEGRATION HEALTH STATUS FOOTER */}
-      <div className="container py-4 text-center">
-        <div className="alert alert-dark d-inline-block shadow-sm">
-          <span className="fw-bold text-secondary">Cloud Core Connection Pipeline Status :</span> <span className="text-success fw-bold">{serverStatus}</span>
-        </div>
-      </div>
     </div>
   );
 }
